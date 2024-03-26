@@ -1,3 +1,7 @@
+export const Pojo = (props: { obj: any }) => (
+	<pre class="max-h-64 bg-yellow-200/30 text-[12px] text-red-500 leading-4 overflow-x-auto my-5">{JSON.stringify(props.obj, null, 2)}</pre>
+);
+
 export const LoginForm = (props: { username?: string; password?: string }) => (
 	<div>
 		<form hx-post="/login" hx-target="closest div" class="max-w-sm mb-6">

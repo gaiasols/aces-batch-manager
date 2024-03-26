@@ -789,6 +789,11 @@ table {
   margin-right: auto;
 }
 
+.my-5 {
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
 .mb-5 {
   margin-bottom: 1.25rem;
 }
@@ -811,6 +816,10 @@ table {
 
 .h-full {
   height: 100%;
+}
+
+.max-h-64 {
+  max-height: 16rem;
 }
 
 .min-h-screen {
@@ -861,6 +870,10 @@ table {
   gap: 1rem;
 }
 
+.overflow-x-auto {
+  overflow-x: auto;
+}
+
 .rounded-lg {
   border-radius: 0.5rem;
 }
@@ -895,6 +908,20 @@ table {
 .bg-white {
   --tw-bg-opacity: 1;
   background-color: rgb(255 255 255 / var(--tw-bg-opacity));
+}
+
+.bg-yellow-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 249 195 / var(--tw-bg-opacity));
+}
+
+.bg-yellow-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 252 232 / var(--tw-bg-opacity));
+}
+
+.bg-yellow-200\/30 {
+  background-color: rgb(254 240 138 / 0.3);
 }
 
 .p-6 {
@@ -951,6 +978,10 @@ table {
   line-height: 1.75rem;
 }
 
+.text-\[12px\] {
+  font-size: 12px;
+}
+
 .font-bold {
   font-weight: 700;
 }
@@ -965,6 +996,10 @@ table {
 
 .leading-none {
   line-height: 1;
+}
+
+.leading-4 {
+  line-height: 1rem;
 }
 
 .-tracking-wide {
@@ -984,6 +1019,11 @@ table {
 .text-stone-600 {
   --tw-text-opacity: 1;
   color: rgb(87 83 78 / var(--tw-text-opacity));
+}
+
+.text-red-500 {
+  --tw-text-opacity: 1;
+  color: rgb(239 68 68 / var(--tw-text-opacity));
 }
 
 .antialiased {

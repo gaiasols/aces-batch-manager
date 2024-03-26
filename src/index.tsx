@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { serveStatic } from 'hono/cloudflare-workers';
 import { Layout, XLayout } from "./layout";
-import { LoginForm } from "./components";
+import { LoginForm, Pojo } from "./components";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -21,5 +21,45 @@ app.get('/', async (c) => {
 		</XLayout>
 	);
 })
+
+app.get('/orgs', async (c) => {
+	const stm = 'SELECT * FROM organizations';
+	const rs = await c.env.DB.prepare(stm).all();
+	return c.html(
+		<Layout>
+			<Pojo obj={rs.results} />
+		</Layout>
+	);
+})
+
+app.get('/batches', async (c) => {
+	const stm = 'SELECT * FROM v_batches';
+	const rs = await c.env.DB.prepare(stm).all();
+	return c.html(
+		<Layout>
+			<Pojo obj={rs.results} />
+		</Layout>
+	);
+});
+
+app.get('/modules', async (c) => {
+	const stm = 'SELECT * FROM modules';
+	const rs = await c.env.DB.prepare(stm).all();
+	return c.html(
+		<Layout>
+			<Pojo obj={rs.results} />
+		</Layout>
+	);
+});
+
+app.get('/assessors', async (c) => {
+	const stm = 'SELECT * FROM assessors';
+	const rs = await c.env.DB.prepare(stm).all();
+	return c.html(
+		<Layout>
+			<Pojo obj={rs.results} />
+		</Layout>
+	);
+});
 
 export default app;
