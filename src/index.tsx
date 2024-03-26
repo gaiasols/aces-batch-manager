@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { serveStatic } from 'hono/cloudflare-workers';
 import { Layout, XLayout } from "./layout";
 import { LoginForm, Pojo } from "./components";
+import { randomNamesWithPassword } from "./utils";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -21,6 +22,15 @@ app.get('/', async (c) => {
 		</XLayout>
 	);
 })
+
+app.get('/names', async (c) => {
+	const names = await randomNamesWithPassword(c, 20)
+	return c.html(
+		<Layout>
+			<Pojo obj={names} />
+		</Layout>
+	);
+});
 
 app.get('/orgs', async (c) => {
 	const stm = 'SELECT * FROM organizations';
