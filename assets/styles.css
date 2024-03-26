@@ -794,6 +794,11 @@ table {
   margin-bottom: 1.25rem;
 }
 
+.my-8 {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
 .mb-5 {
   margin-bottom: 1.25rem;
 }
@@ -982,12 +987,21 @@ table {
   font-size: 12px;
 }
 
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
 .font-bold {
   font-weight: 700;
 }
 
 .font-medium {
   font-weight: 500;
+}
+
+.font-semibold {
+  font-weight: 600;
 }
 
 .uppercase {
@@ -1003,6 +1017,10 @@ table {
 }
 
 .-tracking-wide {
+  letter-spacing: -0.025em;
+}
+
+.tracking-tight {
   letter-spacing: -0.025em;
 }
 

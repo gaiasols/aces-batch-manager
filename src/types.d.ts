@@ -6,3 +6,10 @@ type Env = {
 	COOKIE_PASSWORD: string;
 	DB: D1Database;
 };
+
+type Admin = {
+	id: number;
+	fullname: string;
+	username: string;
+	email: string;
+};

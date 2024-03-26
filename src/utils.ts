@@ -1,6 +1,8 @@
 import { Context } from 'hono';
 import { encrypt } from './crypto';
 import { randomNames } from './names';
+import { getCookie } from 'hono/cookie';
+import { unsealData } from 'iron-session';
 
 export function randomToken() {
 	return '012345678901234567890123456789'
@@ -28,4 +30,11 @@ export async function randomNamesWithPassword(c: Context, n = 20) {
 		array.push({ name: names[i], username, hash });
 	}
 	return array;
+}
+
+export async function getSessionUser(c: Context) {
+	const cookie = getCookie(c, c.env.COOKIE_NAME);
+	if (!cookie) return null;
+	const user = await unsealData(cookie, { password: c.env.COOKIE_PASSWORD });
+	return user as unknown as Admin;
 }
