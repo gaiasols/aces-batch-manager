@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+	table {
+		@apply text-[15px];
+	}
+}
+
+@layer components {
+	.input, .select {
+		@apply text-[15px] py-[6px];
+	}
+	.button {
+		@apply border border-slate-700 bg-slate-700 disabled:bg-gray-300 disabled:border-gray-300 text-white text-[15px] active:bg-slate-900 leading-6 font-semibold uppercase py-[6px] px-6;
+	}
+	.button-hollow {
+		@apply border border-[#6b7280] disabled:border-gray-300 text-[15px] disabled:text-gray-300 active:text-gray-300 leading-6 font-semibold uppercase py-[6px] px-6;
+	}
+}
