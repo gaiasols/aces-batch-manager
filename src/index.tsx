@@ -7,6 +7,7 @@ import { sealData } from "iron-session";
 import { deleteCookie, setCookie } from "hono/cookie";
 import { decrypt } from "./crypto";
 import { html } from "hono/html";
+import { app as batch } from "./batch";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -33,7 +34,7 @@ app.get('/', async (c) => {
 	if (await getSessionUser(c))
 		return c.html(
 			<Layout>
-				<div class="flex items-center gap-4 my-8">
+				<div class="flex items-center gap-4 my-10">
 					<h1 class="flex-grow text-2xl font-semibold tracking-tight">Welkomen</h1>
 				</div>
 				<form method="post" action="/logout">
@@ -188,7 +189,7 @@ app.get('/modules', async (c) => {
 	const modules = rs.results as Module[];
 	return c.html(
 		<Layout>
-			<div class="flex items-center gap-4 my-8">
+			<div class="flex items-center gap-4 my-10">
 				<h1 class="flex-grow text-2xl font-semibold tracking-tight">Daftar Modul</h1>
 			</div>
 			<TableModules modules={modules} />
@@ -201,7 +202,7 @@ app.get('/assessors', async (c) => {
 	const rs = await c.env.DB.prepare(stm).all();
 	return c.html(
 		<Layout>
-			<div class="flex items-center gap-4 my-8">
+			<div class="flex items-center gap-4 my-10">
 				<h1 class="flex-grow text-2xl font-semibold tracking-tight">Daftar Asesor</h1>
 			</div>
 			<TableAssessors data={rs.results} />
@@ -248,4 +249,5 @@ app.post('/orgs/:org_id', async (c) => {
 	return c.redirect(`/batches/${id}`);
 })
 
+app.route('/batches', batch);
 export default app;

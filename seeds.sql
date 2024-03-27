@@ -1,7 +1,6 @@
--- admins: 1
-INSERT INTO admins (id, fullname, username) VALUES
-	(1, 'Admin Utama', 'admin');
--- assessors: 49
+INSERT INTO admins (id, fullname, username, 'hash') VALUES
+	(1, 'Admin Utama', 'admin', '2G8zV91fEKzA9q4IJd12DRefnWTC');
+
 INSERT INTO assessors (id, fullname, username) VALUES
 	(1, 'Bakiman Bakiono', 'bakiman'),
 	(2, 'Wanda Jati', 'wanda'),
@@ -52,12 +51,12 @@ INSERT INTO assessors (id, fullname, username) VALUES
 	(47, 'Windriya Titah', 'windriya'),
 	(48, 'Ayu Gunari', 'ayu123'),
 	(49, 'Tyas Batari Cahyo', 'tyas');
--- organizations: 3, starts from 11
+
 INSERT INTO organizations (id, name) VALUES
 	(11, 'PT Agung Brajak Cunthi'),
 	(12, 'PT Dinoyo Environment Futures'),
 	(13, 'PT Guthe Harmoni Indonesia');
--- tools: 9, with custom ids
+
 INSERT INTO modules (id, category, title, ascent) VALUES
 	('GPQ-01', 'SELF', 'GPQ', 1),
 	('GMATE-01', 'SELF', 'G-MATE', 0),
@@ -80,7 +79,7 @@ INSERT INTO modules (id, category, title, ascent) VALUES
 	('LGD-03', 'DISC', 'LGD Type 3', 1),
 	('GPQGMATE-01', 'SELF', 'GPQ & G-MATE', 1),
 	('GPQCRATE-01', 'SELF', 'GPQ & C-RATE', 1);
--- slot dummy, delete later
+
 INSERT INTO slots (id, modules, mode) VALUES (10, 1, 'SEED-SLOT');
 -- actual slots
 INSERT INTO slots (modules, mode, slot1, slot2, slot3, slot4) VALUES
@@ -164,8 +163,6 @@ UPDATE slots SET case_pos=1 WHERE slot1='CASE';
 UPDATE slots SET case_pos=2 WHERE slot2='CASE';
 UPDATE slots SET case_pos=3 WHERE slot3='CASE';
 UPDATE slots SET case_pos=4 WHERE slot4='CASE';
--- UPDATE slots SET face_pos=1 WHERE slot1='face';
--- UPDATE slots SET lead_pos=1 WHERE slot1='lead';
 UPDATE slots SET face_pos=1 WHERE slot1='FACE';
 UPDATE slots SET face_pos=2 WHERE slot2='FACE';
 UPDATE slots SET face_pos=3 WHERE slot3='FACE';
@@ -179,4 +176,3 @@ INSERT INTO batches (id, token, org_id, type, date) VALUES
 	(101, '101921', 11, 'ASCENT', '2024-03-28'),
 	(102, '102280', 12, 'CUSTOM', '2024-04-18'),
 	(103, '103006', 13, 'ASCENT', '2024-05-03');
-
