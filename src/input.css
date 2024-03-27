@@ -18,4 +18,10 @@
 	.button-hollow {
 		@apply border border-[#6b7280] disabled:border-gray-300 text-[15px] disabled:text-gray-300 active:text-gray-300 leading-6 font-semibold uppercase py-[6px] px-6;
 	}
+	.button-action {
+		@apply rounded bg-white hover:bg-slate-700 border border-slate-600 hover:border-slate-700 text-[12px] text-slate-600 hover:text-white active:bg-slate-800 uppercase font-bold px-4 py-1;
+	}
+	.button-action-stale {
+		@apply rounded bg-white border border-stone-300 text-[12px] text-stone-300 uppercase font-bold cursor-default px-4 py-1;
+	}
 }

@@ -52,3 +52,19 @@ type BatchModule = {
 	module_id: string;
 	category: string;
 };
+
+type Organization = {
+	id: string;
+	name: string;
+	address: string | null;
+	created?: string | null;
+	updated?: string | null;
+};
+
+type VOrganization = Organization & {
+	batches: number;
+	persons: number;
+	last_batch_date: string;
+	prev_id: number | null;
+	next_id: number | null;
+};

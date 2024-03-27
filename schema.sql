@@ -159,3 +159,12 @@ DROP VIEW IF EXISTS v_batches; CREATE VIEW v_batches AS SELECT
 	(SELECT COUNT(*) from batch_modules WHERE batch_id=b.id) modules
 	FROM batches b
 	LEFT JOIN organizations o ON b.org_id=o.id;
+
+DROP VIEW IF EXISTS v_organizations; CREATE VIEW v_organizations AS SELECT
+	o.*,
+	(SELECT COUNT(*) FROM batches WHERE org_id=o.id) batches,
+	(SELECT COUNT(*) FROM persons WHERE org_id=o.id) persons,
+	(SELECT MAX(date) FROM batches WHERE org_id=o.id) last_batch_date,
+	(SELECT id FROM organizations WHERE id < o.id ORDER BY id DESC LIMIT 1) prev_id,
+	(SELECT id FROM organizations WHERE id > o.id LIMIT 1) next_id
+	FROM organizations o;
