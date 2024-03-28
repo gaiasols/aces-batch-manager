@@ -43,20 +43,30 @@ export async function getBatch(db: D1Database, batch_id: number | string) {
 	return found ? (found as VBatch) : null;
 }
 
-export async function getBatchModulesData(db: D1Database, batch_id: number | string, priority = false) {
-	const stm0 = priority
-		? 'SELECT * FROM batch_modules WHERE batch_id=? ORDER BY priority '
-		: 'SELECT * FROM batch_modules WHERE batch_id=?';
-	const stm1 = 'SELECT * FROM modules';
-	const rs = await db.batch([db.prepare(stm0).bind(batch_id), db.prepare(stm1)]);
-	const bm = rs[0].results as BatchModule[];
+export function getAscentBatchInfo(modules: VBatchModule[]) {
 	return {
-		selections: bm.map((m: BatchModule) => tokenize(m)),
-		modules: rs[1].results as Module[],
+		tokens: modules.map((m) => m.category + ':' + m.module_id),
+		mod_self: modules.find((m) => m.category == 'SELF') || null,
+		mod_case: modules.find((m) => m.category == 'CASE') || null,
+		mod_face: modules.find((m) => m.category == 'FACE') || null,
+		mod_disc: modules.find((m) => m.category == 'DISC') || null,
+		grouping: modules.find((m) => m.category == 'DISC') ? 'DISC' : 'SLOT',
+		runtime: modules.find((m) => m.category == 'FACE') || modules.find((m) => m.category == 'DISC') ? 'ASSISSTED' : 'AUTO',
 	};
 }
 
-export function tokenize(m: Module | BatchModule) {
-	const x = m as any;
-	return x.category + ':' + (x.id ? x.id : x.module_id);
+export function getBatchRuntimeInfo(modules: VBatchModule[]) {
+	return {
+		tokens: modules.map((m) => m.category + ':' + m.module_id),
+		mod_self: modules.find((m) => m.category == 'SELF') || null,
+		mod_case: modules.find((m) => m.category == 'CASE') || null,
+		mod_face: modules.find((m) => m.category == 'FACE') || null,
+		mod_disc: modules.find((m) => m.category == 'DISC') || null,
+		mod_1: modules[0] || null,
+		mod_2: modules[1] || null,
+		mod_3: modules[2] || null,
+		mod_4: modules[3] || null,
+		grouping: modules.find((m) => m.category == 'DISC') ? 'DISC' : 'SLOT',
+		runtime: modules.find((m) => m.category == 'FACE') || modules.find((m) => m.category == 'DISC') ? 'ASSISSTED' : 'AUTO',
+	} as BatchRuntimeInfo;
 }

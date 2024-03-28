@@ -872,6 +872,10 @@ table {
   top: 0px;
 }
 
+.order-1 {
+  order: 1;
+}
+
 .float-right {
   float: right;
 }
@@ -964,6 +968,14 @@ table {
 
 .mt-8 {
   margin-top: 2rem;
+}
+
+.mt-1 {
+  margin-top: 0.25rem;
+}
+
+.mt-px {
+  margin-top: 1px;
 }
 
 .block {
@@ -1314,6 +1326,10 @@ table {
 
 .font-semibold {
   font-weight: 600;
+}
+
+.font-normal {
+  font-weight: 400;
 }
 
 .uppercase {

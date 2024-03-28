@@ -35,6 +35,7 @@ type Batch = {
 type VBatch = Batch & {
 	org_name: string;
 	modules: number;
+	persons: number;
 };
 
 type Module = {
@@ -51,6 +52,24 @@ type BatchModule = {
 	batch_id: number;
 	module_id: string;
 	category: string;
+};
+
+type VBatchModule = BatchModule & {
+	title: string;
+};
+
+type BatchRuntimeInfo = {
+	tokens: string[];
+	mod_self: VBatchModule | null;
+	mod_case: VBatchModule | null;
+	mod_face: VBatchModule | null;
+	mod_disc: VBatchModule | null;
+	mod_1: VBatchModule | null;
+	mod_2: VBatchModule | null;
+	mod_3: VBatchModule | null;
+	mod_4: VBatchModule | null;
+	grouping: string;
+	runtime: string;
 };
 
 type Organization = {

@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { Layout } from "./layout";
 import { BatchHero, BatchMenu, DaftarPeserta, FormSettingsModules, Pojo, SettingsDateTitle, SettingsInfo, SettingsModules, UploadPersonsCSV } from "./components";
-import { getBatch, getBatchModulesData, randomNamesWithPassword, tokenize } from "./utils";
+import { getAscentBatchInfo, getBatch, getBatchRuntimeInfo, randomNamesWithPassword } from "./utils";
 import { GET_BatchDateTitle, GET_BatchDateTitleForm, GET_BatchModules, GET_BatchModulesForm, POST_BatchDateTitle, POST_BatchModules } from "./htmx";
 
 const app = new Hono<{ Bindings: Env }>();
@@ -14,28 +14,23 @@ app.get('/:batch_id', async (c) => {
 	const batch_id = c.req.param('batch_id');
 	const batch = await getBatch(c.env.DB, batch_id);
 	if (!batch) return c.notFound();
-	const { modules, selections } = await getBatchModulesData(c.env.DB, batch_id, batch.type == 'CUSTOM');
-	const mod_self = selections.find(x => x.startsWith('SELF'));
-	const mod_case = selections.find(x => x.startsWith('CASE'));
-	const mod_face = selections.find(x => x.startsWith('FACE'));
-	const mod_disc = selections.find((x) => x.startsWith('DISC'));
-	const token = tokenize(modules[0]);
+	const stm0 = 'SELECT * FROM v_batch_modules WHERE batch_id=? ORDER BY priority';
+	const stm1 = 'SELECT * FROM modules';
+	const db = c.env.DB;
+	const rs = await db.batch([db.prepare(stm0).bind(batch_id), db.prepare(stm1)])
+	const batch_modules = rs[0].results as VBatchModule[]
+	const modules = rs[1].results as Module[];
+	const info = getBatchRuntimeInfo(batch_modules);
 	return c.html(
 		<Layout>
 			<BatchHero batch={batch} />
 			<BatchMenu batch_id={batch.id} path="/settings" />
 			<SettingsInfo batch={batch} />
-			<div>
-				<p>token = {token}</p>
-				<p>mod_self = {mod_self}</p>
-				<p>mod_case = {mod_case}</p>
-				<p>mod_face = {mod_face}</p>
-				<p>mod_disc = {mod_disc}</p>
-			</div>
 			<SettingsDateTitle batch={batch} />
-			<>{selections.length > 0 && <SettingsModules batch={batch} modules={modules} selections={selections} />}</>
-			<>{selections.length == 0 && <FormSettingsModules batch={batch} modules={modules} selections={selections} />}</>
-			<Pojo obj={selections} />
+			<>{info.tokens.length > 0 && <SettingsModules batch={batch} info={info} />}</>
+			<>{info.tokens.length == 0 && <FormSettingsModules batch={batch} modules={modules} info={info} />}</>
+			<div></div>
+			<Pojo obj={info} />
 		</Layout>
 	);
 });
@@ -86,6 +81,30 @@ app.get('/:batch_id/assessors', async (c) => {
 		<Layout>
 			<BatchHero batch={batch} />
 			<BatchMenu batch_id={batch.id} path="/assessors" />
+		</Layout>
+	);
+});
+
+app.get('/:batch_id/grouping', async (c) => {
+	const batch_id = c.req.param('batch_id');
+	const batch = await getBatch(c.env.DB, batch_id);
+	if (!batch) return c.notFound();
+	const stm0 = 'SELECT * FROM v_batch_modules WHERE batch_id=?';
+	const rs = await c.env.DB.prepare(stm0).bind(batch_id).all();
+	const modules = rs.results as VBatchModule[];
+	const batch_modules = getAscentBatchInfo(modules);
+
+	return c.html(
+		<Layout>
+			<BatchHero batch={batch} />
+			<BatchMenu batch_id={batch.id} path="/grouping" />
+			<pre>MODSelf : {batch_modules.mod_self ? batch_modules.mod_self.title : '---'}</pre>
+			<pre>MODCase : {batch_modules.mod_case ? batch_modules.mod_case.title : '---'}</pre>
+			<pre>MODFace : {batch_modules.mod_face ? batch_modules.mod_face.title : '---'}</pre>
+			<pre>MODDisc : {batch_modules.mod_disc ? batch_modules.mod_disc.title : '---'}</pre>
+			<pre>RUNTIME : {batch_modules.runtime}</pre>
+			<pre>GROUPING: {batch_modules.grouping}</pre>
+			<Pojo obj={batch_modules} />
 		</Layout>
 	);
 });

@@ -71,8 +71,8 @@ DROP TABLE IF EXISTS batches; CREATE TABLE batches (
 );
 
 DROP TABLE IF EXISTS batch_modules; CREATE TABLE batch_modules (
-	[category] TEXT NOT NULL, -- 'SELF', 'CASE', 'FACE', 'DISC'
 	[batch_id] INTEGER NOT NULL,
+	[category] TEXT NOT NULL, -- 'SELF', 'CASE', 'FACE', 'DISC'
 	[module_id] TEXT NOT NULL,
 	[priority] INTEGER, -- used for module ordering in custom assessment
 	PRIMARY KEY (batch_id, module_id)
@@ -168,3 +168,6 @@ DROP VIEW IF EXISTS v_organizations; CREATE VIEW v_organizations AS SELECT
 	(SELECT id FROM organizations WHERE id < o.id ORDER BY id DESC LIMIT 1) prev_id,
 	(SELECT id FROM organizations WHERE id > o.id LIMIT 1) next_id
 	FROM organizations o;
+
+DROP VIEW IF EXISTS v_batch_modules; CREATE VIEW v_batch_modules AS SELECT
+	b.*, m.title FROM batch_modules b LEFT JOIN modules m ON b.module_id=m.id;

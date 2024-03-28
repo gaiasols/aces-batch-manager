@@ -278,6 +278,7 @@ export const BatchMenu = (props: { batch_id: number; path: string }) => {
 		{ path: '/settings', label: 'Settings' },
 		{ path: '/persons', label: 'Persons' },
 		{ path: '/assessors', label: 'Assessors' },
+		{ path: '/grouping', label: 'Grouping' },
 		{ path: '/deployment', label: 'Deployment' },
 	];
 	return (
@@ -314,12 +315,22 @@ export const SettingsInfo = (props: { batch: VBatch }) => (
 						<td class="font-bold pt-2">{props.batch.org_name}</td>
 					</tr>
 					<tr>
-						<td class="text-nowrap pt-4 pr-2">Batch Type:</td>
-						<td class="font-bold pt-2">{props.batch.type}</td>
+						<td class="text-nowrap pt-2 pr-2">Batch Type:</td>
+						<td class="font-bold pt-2">
+							<span>{props.batch.type}</span>
+						</td>
 					</tr>
 					<tr>
-						<td class="text-nowrap pt-4 pr-2">Date Created:</td>
+						<td class="text-nowrap pt-2 pr-2">Date Created:</td>
 						<td class="font--bold pt-2">{props.batch.created}</td>
+					</tr>
+					<tr>
+						<td class="text-nowrap pt-2 pr-2">Participants:</td>
+						<td class="font-bold pt-2">{props.batch.persons}</td>
+					</tr>
+					<tr>
+						<td class="text-nowrap pt-2 pr-2">Assessors:</td>
+						<td class="font-bold pt-2">[TBD]</td>
 					</tr>
 				</tbody>
 			</table>
@@ -437,36 +448,35 @@ export const LockSVG = () => (
 	</svg>
 );
 
-export const SettingsModules = (props: { batch: VBatch; modules: Module[]; selections: string[] }) => {
-	const ac_selections = { SELF: '', CASE: '', FACE: '', DISC: '' };
-	const cu_selections: string[] = [];
-	if (props.batch.type == 'ASCENT') {
-		props.selections.forEach((catid) => {
-			const [cat, id] = catid.split(':');
-			const module = props.modules.find((m) => m.id == id);
-			if (module) {
-				if (cat == 'SELF') ac_selections.SELF = module.title;
-				if (cat == 'CASE') ac_selections.CASE = module.title;
-				if (cat == 'FACE') ac_selections.FACE = module.title;
-				if (cat == 'DISC') ac_selections.DISC = module.title;
-			}
-		});
-	} else {
-		props.selections.forEach((catid) => {
-			const [cat, id] = catid.split(':');
-			const module = props.modules.find((m) => m.id == id);
-			if (module) {
-				cu_selections.push(module.title);
-			}
-		});
-	}
+export const SettingsModules = (props: { batch: VBatch; info: BatchRuntimeInfo }) => {
+	const { batch, info } = props;
+	const isAC = batch.type == 'ASCENT';
+	const label1 = isAC ? 'Mod Selftest:' : 'Module # 1';
+	const label2 = isAC ? 'Mod Case:' : 'Module # 2';
+	const label3 = isAC ? 'Mod Face2Face:' : 'Module # 3';
+	const label4 = isAC ? 'Mod Discussion:' : 'Module # 4';
+	const mod1 = isAC ? info.mod_self : info.mod_1;
+	const mod2 = isAC ? info.mod_case : info.mod_2;
+	const mod3 = isAC ? info.mod_face : info.mod_3;
+	const mod4 = isAC ? info.mod_disc : info.mod_4;
+
+	const Row = (props: { label: string; module: VBatchModule | null }) => (
+		<tr>
+			<td width="26%" class="text-nowrap pt-2 pr-2">
+				{props.label}
+			</td>
+			<td class="pt-2">
+				<input readonly class="input w-full" type="text" name="mod[]" value={props.module ? props.module.title : '---'} />
+			</td>
+		</tr>
+	);
 	return (
 		<div id="settings-modules" class="rounded border border-stone-300 px-4 pr-2 pt-2 pb-3 my-5">
 			<div class="relative">
 				<div class="absolute top-0 right-0">
 					<button
 						class="flex items-center justify-center w-5 h-5 text-stone-300 hover:text-stone-500 active:text-stone-700"
-						hx-get={`/batches/${props.batch.id}/form-modules`}
+						hx-get={`/batches/${batch.id}/form-modules`}
 						hx-target="#settings-modules"
 						hx-swap="outerHTML"
 					>
@@ -476,48 +486,10 @@ export const SettingsModules = (props: { batch: VBatch; modules: Module[]; selec
 				<form class="text-[15px] pr-6 mb-0">
 					<table class="w-full">
 						<tbody>
-							<tr>
-								<td width="26%" class="text-nowrap pt-2 pr-2">
-									{props.batch.type == 'ASCENT' ? 'Mod Selftest:' : 'Module # 1'}
-								</td>
-								<td class="pt-2">
-									{props.batch.type == 'ASCENT' ? (
-										<input readonly class="input w-full" type="text" name="mod[]" value={ac_selections.SELF || '---'} />
-									) : (
-										<input readonly class="input w-full" type="text" name="mod[]" value={cu_selections[0] || '---'} />
-									)}
-								</td>
-							</tr>
-							<tr>
-								<td class="text-nowrap pt-2 pr-2">{props.batch.type == 'ASCENT' ? 'Mod Case:' : 'Module # 2'}</td>
-								<td class="pt-2">
-									{props.batch.type == 'ASCENT' ? (
-										<input readonly class="input w-full" type="text" name="mod[]" value={ac_selections.CASE || '---'} />
-									) : (
-										<input readonly class="input w-full" type="text" name="mod[]" value={cu_selections[1] || '---'} />
-									)}
-								</td>
-							</tr>
-							<tr>
-								<td class="text-nowrap pt-2 pr-2">{props.batch.type == 'ASCENT' ? 'Mod Face2Face:' : 'Module # 3'}</td>
-								<td class="pt-2">
-									{props.batch.type == 'ASCENT' ? (
-										<input readonly class="input w-full" type="text" name="mod[]" value={ac_selections.FACE || '---'} />
-									) : (
-										<input readonly class="input w-full" type="text" name="mod[]" value={cu_selections[2] || '---'} />
-									)}
-								</td>
-							</tr>
-							<tr>
-								<td class="text-nowrap pt-2 pr-2">{props.batch.type == 'ASCENT' ? 'Mod Discussion:' : 'Module # 4'}</td>
-								<td class="pt-2">
-									{props.batch.type == 'ASCENT' ? (
-										<input readonly class="input w-full" type="text" name="mod[]" value={ac_selections.DISC || '---'} />
-									) : (
-										<input readonly class="input w-full" type="text" name="mod[]" value={cu_selections[3] || '---'} />
-									)}
-								</td>
-							</tr>
+							<Row label={label1} module={mod1} />
+							<Row label={label2} module={mod2} />
+							<Row label={label3} module={mod3} />
+							<Row label={label4} module={mod4} />
 						</tbody>
 					</table>
 				</form>
@@ -526,107 +498,72 @@ export const SettingsModules = (props: { batch: VBatch; modules: Module[]; selec
 	);
 };
 
-export const FormSettingsModules = (props: { batch: VBatch; modules: any[]; selections: string[] }) => (
-	<div id="settings-modules" class="rounded border border-stone-300 px-4 pr-2 pt-2 pb-3 my-5">
-		<form
-			class="text-[15px] pr-6 mb-0"
-			hx-post={`/batches/${props.batch.id}/modules`}
-			hx-target="#settings-modules"
-			hx-swap="outerHTML"
-		>
-			<input type="hidden" name="batch_type" value={props.batch.type} />
-			<table class="w-full">
-				<tbody>
-					<tr>
-						<td width="26%" class="text-nowrap pt-2 pr-2">
-							{props.batch.type == 'ASCENT' ? 'Mod Selftest:' : 'Module # 1'}
-						</td>
-						<td class="pt-2">
-							{props.batch.type == 'ASCENT' ? (
-								<SelectModule cat="SELF" name="self" modules={props.modules} selections={props.selections} />
-							) : (
-								<SelectCustomModule index={0} name="module[]" modules={props.modules} selections={props.selections} />
-							)}
-						</td>
-					</tr>
-					<tr>
-						<td class="text-nowrap pt-2 pr-2">{props.batch.type == 'ASCENT' ? 'Mod Case:' : 'Module # 2'}</td>
-						<td class="pt-2">
-							{props.batch.type == 'ASCENT' ? (
-								<SelectModule cat="CASE" name="case" modules={props.modules} selections={props.selections} />
-							) : (
-								<SelectCustomModule index={1} name="module[]" modules={props.modules} selections={props.selections} />
-							)}
-						</td>
-					</tr>
-					<tr>
-						<td class="text-nowrap pt-2 pr-2">{props.batch.type == 'ASCENT' ? 'Mod Face2Face:' : 'Module # 3'}</td>
-						<td class="pt-2">
-							{props.batch.type == 'ASCENT' ? (
-								<SelectModule cat="FACE" name="face" modules={props.modules} selections={props.selections} />
-							) : (
-								<SelectCustomModule index={2} name="module[]" modules={props.modules} selections={props.selections} />
-							)}
-						</td>
-					</tr>
-					<tr>
-						<td class="text-nowrap pt-2 pr-2">{props.batch.type == 'ASCENT' ? 'Mod Discussion:' : 'Module # 4'}</td>
-						<td class="pt-2">
-							{props.batch.type == 'ASCENT' ? (
-								<SelectModule cat="DISC" name="disc" modules={props.modules} selections={props.selections} />
-							) : (
-								<SelectCustomModule index={3} name="module[]" modules={props.modules} selections={props.selections} />
-							)}
-						</td>
-					</tr>
-					<tr>
-						<td colspan={2} class="border-b border-stone-300 pt-4"></td>
-					</tr>
-					<tr>
-						<td></td>
-						<td class="pt-3">
-							<button class="button mr-3">Submit</button>
-							<button
-								type="button"
-								class="button-hollow float-right"
-								hx-get={`/batches/${props.batch.id}/modules`}
-								hx-target="#settings-modules"
-								hx-swap="outerHTML"
-							>
-								Cancel
-							</button>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</form>
-	</div>
-);
+export const FormSettingsModules = (props: { batch: VBatch; modules: Module[], info: BatchRuntimeInfo }) => {
+	const { batch, modules, info } = props;
+	const isAC = batch.type == 'ASCENT';
+	const label1 = isAC ? 'Mod Selftest:' : 'Module # 1';
+	const label2 = isAC ? 'Mod Case:' : 'Module # 2';
+	const label3 = isAC ? 'Mod Face2Face:' : 'Module # 3';
+	const label4 = isAC ? 'Mod Discussion:' : 'Module # 4';
+	const labels = [label1, label2, label3, label4];
 
-const SelectModule = (props: { readonly?: boolean; name: string; cat: string; modules: Module[]; selections: string[] }) => {
-	const ac_modules = props.modules.filter((m: any) => m.ascent == 1);
-	const _modules = ac_modules.filter((m: any) => m.category == props.cat);
-	const selections = props.selections.map((s) => s.split(':')[1]);
-	if (props.readonly)
-		return (
-			<select disabled name={props.name} class="w-full select pr-12">
-				<option value=""> - N/A</option>
-				{_modules.map((m: any) =>
-					selections.includes(m.id) ? (
-						<option selected value={m.id}>
-							{m.title}
-						</option>
-					) : (
-						<option value={m.id}>{m.title}</option>
-					)
-				)}
-			</select>
-		);
+	const Select = (props: { cat: string, order: number }) => {
+		const { cat, order } = props;
+		if (isAC) return <SelectModule cat={cat.toUpperCase()} name={cat.toLowerCase()} modules={modules} selections={info.tokens} />;
+		return <SelectCustomModule index={order} name="module[]" modules={modules} selections={info.tokens} />;
+	}
+
+	const Row = (props: { cat: string; order: number }) => (
+		<tr>
+			<td width="26%" class="text-nowrap pt-2 pr-2">
+				{labels[props.order-1]}
+			</td>
+			<td class="pt-2">
+				<Select cat={props.cat} order={props.order -1} />
+			</td>
+		</tr>
+	);
 	return (
-		<select name={props.name} class="w-full select pr-12">
+		<div id="settings-modules" class="rounded border border-stone-300 px-4 pr-2 pt-2 pb-3 my-5">
+			<form class="text-[15px] pr-6 mb-0" hx-post={`/batches/${batch.id}/modules`} hx-target="#settings-modules" hx-swap="outerHTML">
+				<input type="hidden" name="batch_type" value={batch.type} />
+				<table class="w-full">
+					<tbody>
+						<Row cat="self" order={1} />
+						<Row cat="case" order={2} />
+						<Row cat="face" order={3} />
+						<Row cat="disc" order={4} />
+						<tr>
+							<td></td>
+							<td class="pt-3">
+								<button class="button mr-3">Submit</button>
+								<button
+									type="button"
+									class="button-hollow float-right"
+									hx-get={`/batches/${batch.id}/modules`}
+									hx-target="#settings-modules"
+									hx-swap="outerHTML"
+								>
+									Cancel
+								</button>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</form>
+		</div>
+	);
+}
+
+const SelectModule = (props: { name: string; cat: string; modules: Module[]; selections: string[] }) => {
+	const { name, cat, modules, selections } = props;
+	const _modules = modules.filter((m: any) => m.ascent == 1).filter((m: any) => m.category == cat);
+	const _selections = selections.map((s) => s.split(':')[1]);
+	return (
+		<select name={name} class="w-full select pr-12">
 			<option value=""> - N/A</option>
 			{_modules.map((m: any) =>
-				selections.includes(m.id) ? (
+				_selections.includes(m.id) ? (
 					<option selected value={m.id}>
 						{m.title}
 					</option>
