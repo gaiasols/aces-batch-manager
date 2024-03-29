@@ -37,6 +37,8 @@ type VBatch = Batch & {
 	org_name: string;
 	modules: number;
 	persons: number;
+	prev_id: number | null;
+	next_id: number | null;
 };
 
 type AcesModule = {

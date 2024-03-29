@@ -21,6 +21,8 @@ app.get('/:batch_id', async (c) => {
 	const batch_modules = rs[0].results as VBatchModule[]
 	const modules = rs[1].results as AcesModule[];
 	const info = getBatchRuntimeInfo(batch_modules, batch.id, batch.type);
+	const prev = batch.prev_id ? `/batches/${batch.prev_id}` : '';
+	const next = batch.next_id ? `/batches/${batch.next_id}` : '';
 	return c.html(
 		<Layout>
 			<BatchHero batch={batch} />
@@ -50,7 +52,12 @@ app.post('/:batch_id/persons', async (c) => {
 	);
 	const stm0 = 'DELETE FROM persons WHERE batch_id=?';
 	const stm1 = `INSERT INTO persons (id, org_id, batch_id, fullname, username, hash) VALUES ${persons.join(', ')}`;
-	await c.env.DB.batch([c.env.DB.prepare(stm0).bind(batch_id), c.env.DB.prepare(stm1)]);
+	const stm2 = 'UPDATE batches SET regrouping=1 WHERE id=?';
+	await c.env.DB.batch([ //
+		c.env.DB.prepare(stm0).bind(batch_id),
+		c.env.DB.prepare(stm1),
+		c.env.DB.prepare(stm2).bind(batch_id),
+	]);
 	return c.redirect(`/batches/${batch_id}/persons`);
 });
 
@@ -108,7 +115,7 @@ app.get('/:batch_id/grouping', async (c) => {
 	const stm1 = 'SELECT * FROM v_persons WHERE batch_id=?';
 	const stm2 = 'SELECT * FROM v_groups WHERE batch_id=?';
 	const db = c.env.DB;
-	const rs = await db.batch([
+	const rs = await db.batch([ //
 		db.prepare(stm0).bind(batch_id),
 		db.prepare(stm1).bind(batch_id),
 		db.prepare(stm2).bind(batch_id),
@@ -131,10 +138,9 @@ app.get('/:batch_id/grouping', async (c) => {
 		<Layout>
 			<BatchHero batch={batch} />
 			<BatchMenu batch_id={batch.id} path="/grouping" />
-			<DEV_TableRuntimeInfo info={info} persons={persons.length} type={batch.type} />
 			<TableGroupSlots groups={groups} modules={modules} type={batch.type} />
 			<TableGroups groups={groups} persons={persons} />
-			<Pojo obj={info} />
+			{/* <Pojo obj={info} /> */}
 		</Layout>
 	);
 });

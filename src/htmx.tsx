@@ -1,5 +1,5 @@
 import { Context } from "hono";
-import { FormSettingsDateTitle, FormSettingsModules, Pojo, SettingsDateTitle, SettingsModules } from "./components";
+import { FormSettingsDateTitle, FormSettingsModules, Pojo, SettingsDateTitle, SettingsModules, TableGroupSlots, TableGroups } from "./components";
 import { getBatch, getBatchRuntimeInfo, regroupAscentBatch, regroupCustomBatch } from "./utils";
 
 function htmxError(c: Context, status: number, message?: string) {
@@ -37,7 +37,6 @@ export const POST_DateTitle = async (c: Context<{ Bindings: Env }>) => {
 }
 
 export const GET_Modules = async (c: Context<{ Bindings: Env }>) => {
-	console.log('GET_BatchModules');
 	const db = c.env.DB;
 	const batch_id = c.req.param('batch_id');
 	const batch = await getBatch(db, batch_id);
@@ -82,12 +81,15 @@ export const POST_Modules = async (c: Context<{ Bindings: Env }>) => {
 		if (form.disc) values.push({ id: form.disc, type: 'DISC', priority: null });
 	} else { // Batch CUSTOM
 		const selected = form['module[]'];
-		const ids = typeof selected == 'object' ? [...(selected as string[])] : [selected];
-		ids.forEach((id) => {
+		const tokens = typeof selected == 'object' ? [...(selected as string[])] : [selected];
+		tokens.forEach((token) => {
 			// id is string with format "XXXX:XXXXXXXX"
-			if (id.length) {
-				const a = id.split(':');
-				values.push({ id: a[2], type: a[1], priority: a[0] });
+			if (token.length) {
+				const splits = token.split('|');
+				const priority = splits[0];
+				const real_id = splits[1];
+				const type = real_id.split(':')[0];
+				values.push({ id: real_id, type: type, priority: priority });
 			}
 		});
 	}
@@ -118,22 +120,36 @@ export const POST_Regroup = async (c: Context<{ Bindings: Env }>) => {
 	const batch = await getBatch(c.env.DB, batch_id);
 	if (!batch) return c.notFound();
 	const stm0 = 'SELECT * FROM v_batch_modules WHERE batch_id=?';
-	const stm1 = 'SELECT * FROM persons WHERE batch_id=?';
-	// const stm2 = 'UPDATE batches SET regrouping=0 WHERE id=?';
+	const stm1 = 'SELECT * FROM v_persons WHERE batch_id=?';
 	const db = c.env.DB;
 	const rs = await db.batch([
 		//
 		db.prepare(stm0).bind(batch_id),
 		db.prepare(stm1).bind(batch_id),
-		// db.prepare(stm2).bind(batch_id),
 	]);
 	const modules = rs[0].results as VBatchModule[];
-	const persons = rs[1].results as Person[];
+	const persons = rs[1].results as VPerson[];
 
 	const info = getBatchRuntimeInfo(modules, batch.id, batch.type, batch.split);
 	// regrouping based on batch type
-	const groups = batch.type == 'ASCENT'
+	const regroup = batch.type == 'ASCENT'
 		? await regroupAscentBatch(db, persons, info)
 		: await regroupCustomBatch(db, persons, info);
-	return c.html(<Pojo obj={groups} />);
+	// return c.html(<Pojo obj={groups} />);
+
+	const stm2 = 'SELECT * FROM v_groups WHERE batch_id=?';
+	const stm3 = 'SELECT * FROM v_persons WHERE batch_id=?';
+	const rsg = await c.env.DB.batch([
+		//
+		c.env.DB.prepare(stm2).bind(batch_id),
+		c.env.DB.prepare(stm3).bind(batch_id),
+	]);
+	const groups = rsg[0].results as VGroup[];
+	const _persons = rsg[1].results as VPerson[];
+	return c.html(
+		<>
+			<TableGroupSlots groups={groups} modules={modules} type={batch.type} />
+			<TableGroups groups={groups} persons={_persons} />
+		</>
+	);
 };

@@ -48,7 +48,8 @@ export function getBatchRuntimeInfo(modules: VBatchModule[], batch_id: number, b
 	const info = {
 		batch_id,
 		modules: modules.length,
-		tokens: modules.map((m) => m.category + ':' + m.module_id),
+		// tokens: modules.map((m) => m.category + ':' + m.module_id),
+		tokens: modules.map((m) => m.module_id),
 		slot_mode: isAC ? ascentBatchMode(modules) : 'CUSTOM ' + modules.length,
 		types: '' + modules.map((m) => m.category).join('-'),
 		permutation: 4,
@@ -105,26 +106,36 @@ export async function regroupAscentBatch(db: D1Database, persons: Person[], info
 	// delete groupings
 	const stm0 = `DELETE FROM groupings WHERE batch_id=?`;
 	const stm1 = `DELETE FROM groups WHERE batch_id=?`;
-	await db.batch([db.prepare(stm0).bind(info.batch_id), db.prepare(stm1).bind(info.batch_id)]);
+	await db.batch([
+		//
+		db.prepare(stm0).bind(info.batch_id),
+		db.prepare(stm1).bind(info.batch_id),
+	]);
 
 	if (persons.length == 0) return [];
-	console.log('slot_mode', info.slot_mode);
+
 	// Load slots
 	const stm3 = `SELECT id,slot1,slot2,slot3,slot4 FROM slots WHERE mode=?`;
 	const rs3 = await db.prepare(stm3).bind(info.slot_mode).all();
-	const slots = rs3.results as { id: number; slot1: string; slot2: string; slot3: string; slot4: string }[];
-	console.log('slots', slots);
+	const _slots = rs3.results as { id: number; slot1: string; slot2: string; slot3: string; slot4: string }[];
+	const module_ids = info.tokens;
+	// Rewrite slots
+	const slots: CustomSlot[] = [];
+	for (let i = 0; i < _slots.length; i++) {
+		slots.push({
+			slot1: module_ids.find((x) => x.startsWith(_slots[i].slot1)) || null,
+			slot2: module_ids.find((x) => x.startsWith(_slots[i].slot2)) || null,
+			slot3: module_ids.find((x) => x.startsWith(_slots[i].slot3)) || null,
+			slot4: module_ids.find((x) => x.startsWith(_slots[i].slot4)) || null,
+		});
+	}
 
 	// Pattern
 	const pattern = info.grouping == 'BYDISC' ? groupPattern(persons.length) : slotGroupPattern(persons.length, info.permutation);
 
-	// 3. Define groups with slot_id
+	// 3. Define groups
 	const groups: any[] = pattern.map((g, i) => {
 		const index = i % info.permutation;
-		// GROUP ID: XXXX-09
-		// Assuming group counts will never reach 100
-		console.log('index', index);
-		console.log('slots[index]', slots[index]);
 		return {
 			id: `${info.batch_id}-${String(i + 1).padStart(2, '0')}`,
 			members: g,
@@ -178,12 +189,17 @@ export async function regroupCustomBatch(db: D1Database, persons: Person[], info
 	// delete groupings
 	const stm0 = `DELETE FROM groupings WHERE batch_id=?`;
 	const stm1 = `DELETE FROM groups WHERE batch_id=?`;
-	await db.batch([db.prepare(stm0).bind(info.batch_id), db.prepare(stm1).bind(info.batch_id)]);
+	await db.batch([
+		//
+		db.prepare(stm0).bind(info.batch_id),
+		db.prepare(stm1).bind(info.batch_id),
+	]);
 
 	// Create groups
-	const module_ids = info.tokens.map((s) => s.split(':')[1]);
+	const module_ids = info.tokens; //.map((s) => s.split(':')[1]);
 	const slots = customSlots(module_ids);
-	console.log(slots);
+	console.log('module_ids', module_ids);
+	console.log('SLOTS', slots);
 	const pattern = info.grouping == 'BYDISC' ? groupPattern(persons.length) : slotGroupPattern(persons.length, info.permutation);
 	const groups: any[] = pattern.map((g, i) => {
 		const index = i % info.permutation;
@@ -198,8 +214,6 @@ export async function regroupCustomBatch(db: D1Database, persons: Person[], info
 			slot4: slots[index].slot4,
 		};
 	});
-
-	console.log('groups:', groups);
 
 	// Create grouping
 	const groupings: Grouping[] = [];
@@ -309,7 +323,6 @@ function slotGroupPattern(pop: number, permutation: number) {
 				rs[i] += 1;
 			}
 		}
-		console.log('rs', rs);
 		return rs;
 	}
 }
