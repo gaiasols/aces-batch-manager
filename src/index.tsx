@@ -215,7 +215,10 @@ app.get('/orgs/:org_id', async (c) => {
 	const stm0 = 'SELECT * FROM v_organizations WHERE id=?';
 	const stm1 = 'SELECT * FROM v_batches WHERE org_id=?';
 	const db = c.env.DB;
-	const rs = await db.batch([db.prepare(stm0).bind(org_id), db.prepare(stm1).bind(org_id)]);
+	const rs = await db.batch([ //
+		db.prepare(stm0).bind(org_id),
+		db.prepare(stm1).bind(org_id),
+	]);
 	if (rs[0].results.length == 0) return c.notFound();
 	const org = rs[0].results[0] as unknown as VOrganization;
 	const batches = rs[1].results as VBatch[];

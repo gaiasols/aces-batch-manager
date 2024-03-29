@@ -58,27 +58,27 @@ INSERT INTO organizations (id, name) VALUES
 	(13, 'PT Guthe Harmoni Indonesia');
 
 INSERT INTO modules (id, category, title, ascent) VALUES
-	('GPQ-01', 'SELF', 'GPQ', 1),
-	('GMATE-01', 'SELF', 'G-MATE', 0),
-	('CRATE-01', 'SELF', 'C-RATE', 0),
-	('CSI-01', 'SELF', 'CSI', 0),
-	('GGATE-01', 'SELF', 'G-GATE', 0),
-	('AIME-01', 'SELF', 'AIME', 0),
-	('GPRO-01', 'SELF', 'G-PRO', 0),
-	('CASE-01', 'CASE', 'Case Analysis 1', 1),
-	('CASE-02', 'CASE', 'Case Analysis 2', 1),
-	('CASE-03', 'CASE', 'Case Analysis 3', 1),
-	('INTRAY-01', 'CASE', 'Intray Type 1', 1),
-	('INTRAY-02', 'CASE', 'Intray Type 2', 1),
-	('INTRAY-03', 'CASE', 'Intray Type 3', 1),
-	('SJT-01', 'CASE', 'SJT 1', 0),
-	('INTERVIEW-01', 'FACE', 'Interview', 1),
-	('PRESENTATION-01', 'FACE', 'Presentation', 1),
-	('LGD-01', 'DISC', 'LGD Type 1', 1),
-	('LGD-02', 'DISC', 'LGD Type 2', 1),
-	('LGD-03', 'DISC', 'LGD Type 3', 1),
-	('GPQGMATE-01', 'SELF', 'GPQ & G-MATE', 1),
-	('GPQCRATE-01', 'SELF', 'GPQ & C-RATE', 1);
+	('SELF:GPQ-01', 'SELF', 'GPQ', 1),
+	('SELF:GMATE-01', 'SELF', 'G-MATE', 0),
+	('SELF:CRATE-01', 'SELF', 'C-RATE', 0),
+	('SELF:CSI-01', 'SELF', 'CSI', 0),
+	('SELF:GGATE-01', 'SELF', 'G-GATE', 0),
+	('SELF:AIME-01', 'SELF', 'AIME', 0),
+	('SELF:GPRO-01', 'SELF', 'G-PRO', 0),
+	('CASE:CA-01', 'CASE', 'Case: General', 1),
+	('CASE:CA-02', 'CASE', 'Case: Manufacture', 1),
+	('CASE:CA-03', 'CASE', 'Case: Government', 1),
+	('CASE:INTRAY-01', 'CASE', 'Intray: General', 1),
+	('CASE:INTRAY-02', 'CASE', 'Intray: Industrial', 1),
+	('CASE:INTRAY-03', 'CASE', 'Intray: Trading', 1),
+	('CASE:SJT-01', 'CASE', 'SJT: General', 0),
+	('FACE:INTERVIEW-01', 'FACE', 'Interview', 1),
+	('FACE:PRESENTATION-01', 'FACE', 'Presentation', 1),
+	('DISC:LGD-01', 'DISC', 'LGD: General', 1),
+	('DISC:LGD-02', 'DISC', 'LGD: Teamwork', 1),
+	('DISC:LGD-03', 'DISC', 'LGD: Evaluation', 1),
+	('SELF:GPQGMATE-01', 'SELF', 'GPQ & G-MATE', 1),
+	('SELF:GPQCRATE-01', 'SELF', 'GPQ & C-RATE', 1);
 
 INSERT INTO slots (id, modules, mode) VALUES (10, 1, 'SEED-SLOT');
 -- actual slots

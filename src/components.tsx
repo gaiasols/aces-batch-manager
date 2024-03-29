@@ -262,14 +262,19 @@ export const FormNewBatch = (props: { org_id: string | number }) => (
 	</div>
 );
 
-export const BatchHero = (props: { batch: VBatch }) => (
-	<>
-		<div class="flex items-center gap-4 mt-10 mb-10">
-			<h1 class="flex-grow text-2xl text-sky-500 font-semibold tracking-tight">Batch # {props.batch.id}</h1>
-		</div>
-		<p class="font-bold -mt-10 mb-6">{props.batch.org_name}</p>
-	</>
-);
+export const BatchHero = (props: { batch: VBatch }) => {
+	const prev = props.batch.prev_id ? `/batches/${props.batch.prev_id}` : '';
+	const next = props.batch.next_id ? `/batches/${props.batch.next_id}` : '';
+	return (
+		<>
+			<div class="flex items-center gap-4 mt-10 mb-10">
+				<h1 class="flex-grow text-2xl text-sky-500 font-semibold tracking-tight">Batch # {props.batch.id}</h1>
+				<PrevNext prev={prev} next={next} />
+			</div>
+			<p class="font-bold -mt-10 mb-6">{props.batch.org_name}</p>
+		</>
+	);
+}
 
 export const BatchMenu = (props: { batch_id: number; path: string }) => {
 	const { batch_id, path } = props;
@@ -319,10 +324,10 @@ export const SettingsInfo = (props: { batch: VBatch }) => (
 							<span>{props.batch.type}</span>
 						</td>
 					</tr>
-					<tr>
+					{/* <tr>
 						<td class="text-nowrap pt-2 pr-2">Date Created:</td>
 						<td class="font--bold pt-2">{props.batch.created}</td>
-					</tr>
+					</tr> */}
 					<tr>
 						<td class="text-nowrap pt-2 pr-2">Participants:</td>
 						<td class="font-bold pt-2">{props.batch.persons}</td>
@@ -557,12 +562,11 @@ export const FormSettingsModules = (props: { batch: VBatch; modules: AcesModule[
 const SelectModule = (props: { name: string; cat: string; modules: AcesModule[]; selections: string[] }) => {
 	const { name, cat, modules, selections } = props;
 	const _modules = modules.filter((m: any) => m.ascent == 1).filter((m: any) => m.category == cat);
-	const _selections = selections.map((s) => s.split(':')[1]);
 	return (
 		<select name={name} class="w-full select pr-12">
 			<option value=""> - N/A</option>
 			{_modules.map((m: any) =>
-				_selections.includes(m.id) ? (
+				selections.includes(m.id) ? (
 					<option selected value={m.id}>
 						{m.title}
 					</option>
@@ -575,19 +579,19 @@ const SelectModule = (props: { name: string; cat: string; modules: AcesModule[];
 };
 
 const SelectCustomModule = (props: { readonly?: boolean; name: string; index: number; modules: any[]; selections: string[] }) => {
-	const { name, index, modules, readonly } = props;
-	const selections = props.selections.map((s) => s.split(':')[1]);
+	const { name, index, modules, readonly, selections } = props;
+	const _selections = props.selections.map((s) => s.split(':')[1]);
 	if (readonly)
 		return (
 			<select disabled name={name} class="w-full select pr-12">
 				<option value=""> - N/A</option>
 				{modules.map((m: any) =>
 					selections[index] && selections[index] == m.id ? (
-						<option selected value={index + 1 + ':' + m.category + ':' + m.id}>
+						<option selected value={(index + 1) + '|' + m.id}>
 							{m.title}
 						</option>
 					) : (
-						<option value={index + 1 + ':' + m.category + ':' + m.id}>{m.title}</option>
+						<option value={(index + 1) + '|' + m.id}>{m.title}</option>
 					)
 				)}
 			</select>
@@ -597,11 +601,11 @@ const SelectCustomModule = (props: { readonly?: boolean; name: string; index: nu
 			<option value=""> - N/A</option>
 			{modules.map((m: any) =>
 				selections[index] && selections[index] == m.id ? (
-					<option selected value={index + 1 + ':' + m.category + ':' + m.id}>
+					<option selected value={(index + 1) + '|' + m.id}>
 						{m.title}
 					</option>
 				) : (
-					<option value={index + 1 + ':' + m.category + ':' + m.id}>{m.title}</option>
+					<option value={(index + 1) + '|' + m.id}>{m.title}</option>
 				)
 			)}
 		</select>
@@ -660,38 +664,27 @@ export const TableGroupSlots = (props: { groups: VGroup[], modules: VBatchModule
 	const { groups, modules, type } = props;
 	return (
 		<div id="" class="">
-			<p class="text-sm font-semibold mb-2">Pembagian grup dan slot dalam batch ini</p>
-			<table class="w-full border-t border-stone-500 text-[12.35px] font-mono mb-6">
+			<p class="text-[15px] font-semibold mb-2">Pembagian grup dan slot dalam batch ini</p>
+			<table class="w-full border-t border-stone-500 mb-6">
 				<thead>
-					<tr class="border-b border-stone-300">
-						<td class="pr-2 py-2"></td>
+					<tr class="border-b border-stone-400">
+						<td class="pr-4 py-2"></td>
 						<td class="pr-2 py-2">Slot 1</td>
 						<td class="pr-2 py-2">Slot 2</td>
 						<td class="pr-2 py-2">Slot 3</td>
-						<td class="pr-2 py-2">Slot 4</td>
+						<td class="py-2">Slot 4</td>
 					</tr>
 				</thead>
 				<tbody>
-					{type == 'ASCENT' &&
-						groups.map((g) => (
-							<tr class="border-b border-stone-300">
-								<td class="pr-2 py-2">{g.name}</td>
-								<td class="pr-2 py-2">{modules.filter((m) => m.category == g.slot1)[0]?.title || '---'}</td>
-								<td class="pr-2 py-2">{modules.filter((m) => m.category == g.slot2)[0]?.title || '---'}</td>
-								<td class="pr-2 py-2">{modules.filter((m) => m.category == g.slot3)[0]?.title || '---'}</td>
-								<td class="pr-2 py-2">{modules.filter((m) => m.category == g.slot4)[0]?.title || '---'}</td>
-							</tr>
-						))}
-					{type == 'CUSTOM' &&
-						groups.map((g) => (
-							<tr class="border-b border-stone-300">
-								<td class="pr-2 py-2">{g.name}</td>
-								<td class="pr-2 py-2">{modules.filter((m) => m.module_id == g.slot1)[0]?.title || '---'}</td>
-								<td class="pr-2 py-2">{modules.filter((m) => m.module_id == g.slot2)[0]?.title || '---'}</td>
-								<td class="pr-2 py-2">{modules.filter((m) => m.module_id == g.slot3)[0]?.title || '---'}</td>
-								<td class="pr-2 py-2">{modules.filter((m) => m.module_id == g.slot4)[0]?.title || '---'}</td>
-							</tr>
-						))}
+					{groups.map((g) => (
+						<tr class="border-b border-stone-300">
+							<td class="pr-4 py-2 font-medium">{g.name}</td>
+							<td class="pr-2 py-2">{modules.filter((m) => m.module_id == g.slot1)[0]?.title || '---'}</td>
+							<td class="pr-2 py-2">{modules.filter((m) => m.module_id == g.slot2)[0]?.title || '---'}</td>
+							<td class="pr-2 py-2">{modules.filter((m) => m.module_id == g.slot3)[0]?.title || '---'}</td>
+							<td class="py-2">{modules.filter((m) => m.module_id == g.slot4)[0]?.title || '---'}</td>
+						</tr>
+					))}
 				</tbody>
 			</table>
 		</div>
@@ -702,8 +695,8 @@ export const TableGroups = (props: { groups: VGroup[], persons: VPerson[] }) => 
 	<div>
 		{props.groups.map((g) => (
 			<div class="my-4">
-				<p class="text-sm font-semibold mb-2">{g.name}</p>
-				<table class="w-full border-t border-stone-500 text-[12.35px] font-mono">
+				<p class="text-[15px] font-semibold mb-2">{g.name}</p>
+				<table class="w-full border-t border-stone-500">
 					<tbody>
 						{props.persons
 							.filter((p) => p.group_id == g.id)
