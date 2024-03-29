@@ -1,5 +1,4 @@
 import { html } from "hono/html";
-import { decrypt } from "./crypto";
 
 export const Pojo = (props: { obj: any }) => (
 	<pre class="max-h-64 bg-yellow-200/30 text-[12px] text-red-500 leading-4 overflow-x-auto my-5">{JSON.stringify(props.obj, null, 2)}</pre>
@@ -122,7 +121,7 @@ export const TableBatches = (props: { batches: VBatch[] }) => (
 	</div>
 );
 
-export const TableModules = (props: { modules: Module[] }) => (
+export const TableModules = (props: { modules: AcesModule[] }) => (
 	<div>
 		<table class="w-full border-t border-stone-400">
 			<tbody>
@@ -498,7 +497,7 @@ export const SettingsModules = (props: { batch: VBatch; info: BatchRuntimeInfo }
 	);
 };
 
-export const FormSettingsModules = (props: { batch: VBatch; modules: Module[], info: BatchRuntimeInfo }) => {
+export const FormSettingsModules = (props: { batch: VBatch; modules: AcesModule[], info: BatchRuntimeInfo }) => {
 	const { batch, modules, info } = props;
 	const isAC = batch.type == 'ASCENT';
 	const label1 = isAC ? 'Mod Selftest:' : 'Module # 1';
@@ -555,7 +554,7 @@ export const FormSettingsModules = (props: { batch: VBatch; modules: Module[], i
 	);
 }
 
-const SelectModule = (props: { name: string; cat: string; modules: Module[]; selections: string[] }) => {
+const SelectModule = (props: { name: string; cat: string; modules: AcesModule[]; selections: string[] }) => {
 	const { name, cat, modules, selections } = props;
 	const _modules = modules.filter((m: any) => m.ascent == 1).filter((m: any) => m.category == cat);
 	const _selections = selections.map((s) => s.split(':')[1]);
@@ -656,3 +655,117 @@ export const UploadPersonsCSV = (props: { batch: Batch | VBatch }) => (
 		</form>
 	</div>
 );
+
+export const TableGroupSlots = (props: { groups: VGroup[], modules: VBatchModule[], type: string }) => {
+	const { groups, modules, type } = props;
+	return (
+		<div id="" class="">
+			<p class="text-sm font-semibold mb-2">Pembagian grup dan slot dalam batch ini</p>
+			<table class="w-full border-t border-stone-500 text-[12.35px] font-mono mb-6">
+				<thead>
+					<tr class="border-b border-stone-300">
+						<td class="pr-2 py-2"></td>
+						<td class="pr-2 py-2">Slot 1</td>
+						<td class="pr-2 py-2">Slot 2</td>
+						<td class="pr-2 py-2">Slot 3</td>
+						<td class="pr-2 py-2">Slot 4</td>
+					</tr>
+				</thead>
+				<tbody>
+					{type == 'ASCENT' &&
+						groups.map((g) => (
+							<tr class="border-b border-stone-300">
+								<td class="pr-2 py-2">{g.name}</td>
+								<td class="pr-2 py-2">{modules.filter((m) => m.category == g.slot1)[0]?.title || '---'}</td>
+								<td class="pr-2 py-2">{modules.filter((m) => m.category == g.slot2)[0]?.title || '---'}</td>
+								<td class="pr-2 py-2">{modules.filter((m) => m.category == g.slot3)[0]?.title || '---'}</td>
+								<td class="pr-2 py-2">{modules.filter((m) => m.category == g.slot4)[0]?.title || '---'}</td>
+							</tr>
+						))}
+					{type == 'CUSTOM' &&
+						groups.map((g) => (
+							<tr class="border-b border-stone-300">
+								<td class="pr-2 py-2">{g.name}</td>
+								<td class="pr-2 py-2">{modules.filter((m) => m.module_id == g.slot1)[0]?.title || '---'}</td>
+								<td class="pr-2 py-2">{modules.filter((m) => m.module_id == g.slot2)[0]?.title || '---'}</td>
+								<td class="pr-2 py-2">{modules.filter((m) => m.module_id == g.slot3)[0]?.title || '---'}</td>
+								<td class="pr-2 py-2">{modules.filter((m) => m.module_id == g.slot4)[0]?.title || '---'}</td>
+							</tr>
+						))}
+				</tbody>
+			</table>
+		</div>
+	);
+}
+
+export const TableGroups = (props: { groups: VGroup[], persons: VPerson[] }) => (
+	<div>
+		{props.groups.map((g) => (
+			<div class="my-4">
+				<p class="text-sm font-semibold mb-2">{g.name}</p>
+				<table class="w-full border-t border-stone-500 text-[12.35px] font-mono">
+					<tbody>
+						{props.persons
+							.filter((p) => p.group_id == g.id)
+							.map((p, i) => (
+								<tr class="border-b border-stone-300">
+									<td class="w-8 pr-2 py-2">{i + 1}</td>
+									<td class="pr-2 py-2">{p.fullname}</td>
+								</tr>
+							))}
+					</tbody>
+				</table>
+			</div>
+		))}
+	</div>
+);
+
+export const DEV_TableRuntimeInfo = (props: { info: BatchRuntimeInfo, persons: number, type: string }) => {
+	const { info, persons, type } = props;
+
+	const Row = (props: { label: string; value: string | number | null }) => (
+		<tr>
+			<td class="pr-2">{props.label}</td>
+			<td class="pr-2">:</td>
+			<td>{props.value}</td>
+		</tr>
+	);
+
+	const Sep = () => (
+		<tr>
+			<td colspan={3} class="h-2"></td>
+		</tr>
+	);
+
+	return (
+		<table class="text-[12.35px] font-mono my-6">
+			<tbody>
+				<Row label="Persons" value={persons} />
+				<Row label="Modules" value={info.modules} />
+				<Row label="Mode" value={info.slot_mode} />
+				<Row label="Types" value={info.types} />
+				<Row label="Runtime" value={info.runtime} />
+				<Row label="Grouping" value={info.grouping} />
+				<Row label="Permutation" value={info.permutation} />
+				{type == 'ASCENT' && (
+					<>
+						<Sep />
+						<Row label="MOD Self" value={info.mod_self?.title || '---'} />
+						<Row label="MOD Case" value={info.mod_case?.title || '---'} />
+						<Row label="MOD Face" value={info.mod_face?.title || '---'} />
+						<Row label="MOD Disc" value={info.mod_disc?.title || '---'} />
+					</>
+				)}
+				{type != 'ASCENT' && (
+					<>
+						<Sep />
+						<Row label="MOD # 1" value={info.mod_1?.title || '---'} />
+						<Row label="MOD # 2" value={info.mod_2?.title || '---'} />
+						<Row label="MOD # 3" value={info.mod_3?.title || '---'} />
+						<Row label="MOD # 4" value={info.mod_4?.title || '---'} />
+					</>
+				)}
+			</tbody>
+		</table>
+	);
+}
