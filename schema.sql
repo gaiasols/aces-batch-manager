@@ -62,6 +62,7 @@ DROP TABLE IF EXISTS batches; CREATE TABLE batches (
 	[split] INTEGER CHECK(split IN(1, 2, 3, 4)) NOT NULL DEFAULT 1,
 	[title] TEXT NOT NULL DEFAULT 'Batch',
 	[status] INTEGER NOT NULL DEFAULT 0, -- 1 (deployed) 2 (maintenance) 3 (closed) 9 (archived)
+	[regrouping] INTEGER NOT NULL DEFAULT 0, -- 1 needs regrouping
 	[time1] TEXT,
 	[time2] TEXT,
 	[time3] TEXT,
@@ -94,19 +95,22 @@ DROP TABLE IF EXISTS persons; CREATE TABLE persons (
 DROP TABLE IF EXISTS groups; CREATE TABLE groups (
 	[id] TEXT PRIMARY KEY,
 	[batch_id] INTEGER NOT NULL,
+	[ass_id] INTEGER,
 	[name] TEXT NOT NULL,
-	[slot_id] TEXT,
-	[LGDC_ass_id] INTEGER,
+	[slot1] TEXT,
+	[slot2] TEXT,
+	[slot3] TEXT,
+	[slot4] TEXT,
 	[created] TEXT NOT NULL DEFAULT (datetime('now')||'Z'),
 	[updated] TEXT
 );
 
 DROP TABLE IF EXISTS groupings; CREATE TABLE groupings (
-	batch_id INTEGER NOT NULL,
-	group_id TEXT NOT NULL,
-	person_id TEXT NOT NULL,
-	face_ass_id INTEGER,
-	case_ass_id INTEGER,
+	[batch_id] INTEGER NOT NULL,
+	[group_id] TEXT NOT NULL,
+	[person_id] TEXT NOT NULL,
+	[face_ass_id] INTEGER,
+	[case_ass_id] INTEGER,
 	[created] TEXT NOT NULL DEFAULT (datetime('now')||'Z'),
 	[updated] TEXT,
 	PRIMARY KEY (batch_id, person_id)
@@ -171,3 +175,25 @@ DROP VIEW IF EXISTS v_organizations; CREATE VIEW v_organizations AS SELECT
 
 DROP VIEW IF EXISTS v_batch_modules; CREATE VIEW v_batch_modules AS SELECT
 	b.*, m.title FROM batch_modules b LEFT JOIN modules m ON b.module_id=m.id;
+
+DROP VIEW IF EXISTS v_groups; CREATE VIEW v_groups AS SELECT
+	g.*,
+	a.fullname disc_assessor_name,
+	(SELECT COUNT(*) FROM groupings WHERE group_id=g.id) members
+	FROM groups g
+	LEFT JOIN assessors a ON g.ass_id=a.id;
+
+DROP VIEW IF EXISTS v_persons; CREATE VIEW v_persons AS SELECT
+  p.*
+	, o.name org_name
+  , gg.group_id, gr.name group_name
+  , gr.ass_id, a3.fullname disc_assessor_name
+  , gg.face_ass_id, a1.fullname face_assessor_name
+  , gg.case_ass_id, a2.fullname case_assessor_name
+  FROM persons p
+  LEFT JOIN organizations o ON p.org_id=o.id
+  LEFT JOIN groupings gg ON p.id=gg.person_id
+  LEFT JOIN groups gr ON gg.group_id=gr.id
+  LEFT JOIN assessors a1 ON gg.face_ass_id=a1.id
+  LEFT JOIN assessors a2 ON gg.case_ass_id=a2.id
+  LEFT JOIN assessors a3 ON gr.ass_id=a3.id;

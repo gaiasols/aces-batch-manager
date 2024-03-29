@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { Layout } from "./layout";
-import { BatchHero, BatchMenu, DaftarPeserta, FormSettingsModules, Pojo, SettingsDateTitle, SettingsInfo, SettingsModules, UploadPersonsCSV } from "./components";
-import { getAscentBatchInfo, getBatch, getBatchRuntimeInfo, randomNamesWithPassword } from "./utils";
-import { GET_BatchDateTitle, GET_BatchDateTitleForm, GET_BatchModules, GET_BatchModulesForm, POST_BatchDateTitle, POST_BatchModules } from "./htmx";
+import { BatchHero, BatchMenu, DEV_TableRuntimeInfo, DaftarPeserta, FormSettingsModules, Pojo, SettingsDateTitle, SettingsInfo, SettingsModules, TableGroupSlots, TableGroups, UploadPersonsCSV } from "./components";
+import { getBatch, getBatchRuntimeInfo, randomNamesWithPassword } from "./utils";
+import { GET_DateTitle, GET_FormDateTitle, GET_FormModules, GET_Modules, POST_DateTitle, POST_Modules, POST_Regroup } from "./htmx";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -19,8 +19,8 @@ app.get('/:batch_id', async (c) => {
 	const db = c.env.DB;
 	const rs = await db.batch([db.prepare(stm0).bind(batch_id), db.prepare(stm1)])
 	const batch_modules = rs[0].results as VBatchModule[]
-	const modules = rs[1].results as Module[];
-	const info = getBatchRuntimeInfo(batch_modules);
+	const modules = rs[1].results as AcesModule[];
+	const info = getBatchRuntimeInfo(batch_modules, batch.id, batch.type);
 	return c.html(
 		<Layout>
 			<BatchHero batch={batch} />
@@ -89,22 +89,52 @@ app.get('/:batch_id/grouping', async (c) => {
 	const batch_id = c.req.param('batch_id');
 	const batch = await getBatch(c.env.DB, batch_id);
 	if (!batch) return c.notFound();
-	const stm0 = 'SELECT * FROM v_batch_modules WHERE batch_id=?';
-	const rs = await c.env.DB.prepare(stm0).bind(batch_id).all();
-	const modules = rs.results as VBatchModule[];
-	const batch_modules = getAscentBatchInfo(modules);
 
+	// Batch needs regrouping
+	if (batch.regrouping > 0) return c.html(
+		<Layout>
+			<BatchHero batch={batch} />
+			<BatchMenu batch_id={batch.id} path="/grouping" />
+			<div>
+				<p class="text-red-500 my-5">Batch ini telah mengalami perubahan yang memerlukan regrouping.</p>
+				<button class="button" hx-post={`/batches/${batch.id}/regroup`} hx-target="closest div" hx-swap="innerHTML">
+					Regroup Batch
+				</button>
+			</div>
+		</Layout>
+	);
+
+	const stm0 = 'SELECT * FROM v_batch_modules WHERE batch_id=?';
+	const stm1 = 'SELECT * FROM v_persons WHERE batch_id=?';
+	const stm2 = 'SELECT * FROM v_groups WHERE batch_id=?';
+	const db = c.env.DB;
+	const rs = await db.batch([
+		db.prepare(stm0).bind(batch_id),
+		db.prepare(stm1).bind(batch_id),
+		db.prepare(stm2).bind(batch_id),
+	]);
+	const modules = rs[0].results as VBatchModule[];
+	const persons = rs[1].results as VPerson[];
+	const groups = rs[2].results as VGroup[]
+
+	// Not ready for grouping
+	if (modules.length == 0 || persons.length == 0) return c.html(
+		<Layout>
+			<BatchHero batch={batch} />
+			<BatchMenu batch_id={batch.id} path="/grouping" />
+			<p class="">Belum ada data peserta dan/atau data modul.</p>
+		</Layout>
+	);
+
+	const info = getBatchRuntimeInfo(modules, batch.id, batch.type, batch.split);
 	return c.html(
 		<Layout>
 			<BatchHero batch={batch} />
 			<BatchMenu batch_id={batch.id} path="/grouping" />
-			<pre>MODSelf : {batch_modules.mod_self ? batch_modules.mod_self.title : '---'}</pre>
-			<pre>MODCase : {batch_modules.mod_case ? batch_modules.mod_case.title : '---'}</pre>
-			<pre>MODFace : {batch_modules.mod_face ? batch_modules.mod_face.title : '---'}</pre>
-			<pre>MODDisc : {batch_modules.mod_disc ? batch_modules.mod_disc.title : '---'}</pre>
-			<pre>RUNTIME : {batch_modules.runtime}</pre>
-			<pre>GROUPING: {batch_modules.grouping}</pre>
-			<Pojo obj={batch_modules} />
+			<DEV_TableRuntimeInfo info={info} persons={persons.length} type={batch.type} />
+			<TableGroupSlots groups={groups} modules={modules} type={batch.type} />
+			<TableGroups groups={groups} persons={persons} />
+			<Pojo obj={info} />
 		</Layout>
 	);
 });
@@ -126,16 +156,18 @@ app.get('/:batch_id/deployment', async (c) => {
  * ========== HTMX Routes
  */
 
-app.post('/:batch_id/date-title', async (c) => POST_BatchDateTitle(c));
+app.post('/:batch_id/date-title', async (c) => POST_DateTitle(c));
 
-app.get('/:batch_id/date-title', async (c) => GET_BatchDateTitle(c));
+app.get('/:batch_id/date-title', async (c) => GET_DateTitle(c));
 
-app.get('/:batch_id/form-date-title', async (c) => GET_BatchDateTitleForm(c));
+app.get('/:batch_id/form-date-title', async (c) => GET_FormDateTitle(c));
 
-app.get('/:batch_id/modules', async (c) => GET_BatchModules(c));
+app.get('/:batch_id/modules', async (c) => GET_Modules(c));
 
-app.get('/:batch_id/form-modules', async (c) => GET_BatchModulesForm(c));
+app.get('/:batch_id/form-modules', async (c) => GET_FormModules(c));
 
-app.post('/:batch_id/modules', async (c) => POST_BatchModules(c));
+app.post('/:batch_id/modules', async (c) => POST_Modules(c));
+
+app.post('/:batch_id/regroup', async (c) => POST_Regroup(c));
 
 export { app };

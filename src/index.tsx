@@ -186,7 +186,7 @@ app.get('/batches', async (c) => {
 app.get('/modules', async (c) => {
 	const stm = 'SELECT * FROM modules ORDER BY ascent DESC';
 	const rs = await c.env.DB.prepare(stm).all();
-	const modules = rs.results as Module[];
+	const modules = rs.results as AcesModule[];
 	return c.html(
 		<Layout>
 			<div class="flex items-center gap-4 my-10">
