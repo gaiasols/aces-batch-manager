@@ -171,3 +171,20 @@ type CustomSlot = {
 	slot3: string | null;
 	slot4: string | null;
 };
+
+type AssessorAllocation = {
+	batch_id: number;
+	disc_slot1: number;
+	disc_slot2: number;
+	disc_slot3: number;
+	disc_slot4: number;
+	face_slot1: number;
+	face_slot2: number;
+	face_slot3: number;
+	face_slot4: number;
+	face_slot1_size: number | null;
+	face_slot2_size: number | null;
+	face_slot3_size: number | null;
+	face_slot4_size: number | null;
+	permutation: number;
+};

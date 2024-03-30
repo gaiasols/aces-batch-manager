@@ -84,10 +84,24 @@ app.get('/:batch_id/assessors', async (c) => {
 	const batch_id = c.req.param('batch_id');
 	const batch = await getBatch(c.env.DB, batch_id);
 	if (!batch) return c.notFound();
+	const stm = 'SELECT * FROM v_allocs WHERE batch_id=?';
+	const rs = await c.env.DB.prepare(stm).bind(batch_id).first();
+	const alloc = rs as AssessorAllocation;
+	const req = {
+		min_disc: Math.max(alloc.disc_slot1, alloc.disc_slot2, alloc.disc_slot3, alloc.disc_slot4),
+		max_disc: [alloc.disc_slot1, alloc.disc_slot2, alloc.disc_slot3, alloc.disc_slot4].reduce((a, o) => { return a + o }, 0),
+		min_face: Math.max(alloc.face_slot1_size||0, alloc.face_slot2_size||0, alloc.face_slot3_size||0, alloc.face_slot4_size||0),
+		max_face: [alloc.face_slot1_size||0, alloc.face_slot2_size||0, alloc.face_slot3_size||0, alloc.face_slot4_size||0].reduce((a, o) => { return a + o; }, 0),
+	};
 	return c.html(
 		<Layout>
 			<BatchHero batch={batch} />
 			<BatchMenu batch_id={batch.id} path="/assessors" />
+			<p class="-mb-2">Kebutuhan asesor</p>
+			<Pojo obj={req} />
+			<p class="-mb-2">Data v_allocs</p>
+			<Pojo obj={alloc} />
+			<Pojo obj={batch} />
 		</Layout>
 	);
 });
