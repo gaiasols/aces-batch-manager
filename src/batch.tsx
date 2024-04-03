@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { Layout } from "./layout";
 import { BatchHero, BatchMenu, DaftarPeserta, FormSettingsDateTitle, FormSettingsModules, Pojo, SettingsDateTitle, SettingsInfo, SettingsModules, UploadPersonsCSV } from "./components";
-import { getBatchModulesData, randomNamesWithPassword } from "./utils";
+import { createParticipants, getBatchModulesData, randomNamesWithPassword } from "./utils";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -132,8 +132,8 @@ app.post('/:batch_id/modules', async (c) => {
 /***** Route: /batches/:batch_id/persons *****/
 
 app.post('/:batch_id/persons', async (c) => {
-	const { batch_id, org_id, num } = await c.req.parseBody();
-	const names = await randomNamesWithPassword(c, parseInt(num as string));
+	const { batch_id, org_id, num, participants } = await c.req.parseBody();
+	const names = await createParticipants(c, JSON.parse(participants as string));
 	const persons = names.map(
 		(n, i) => `('${batch_id}-${String(i + 1).padStart(4, '0')}', ${org_id}, ${batch_id}, '${n.name}', '${n.username}', '${n.hash}')`
 	);

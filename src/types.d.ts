@@ -68,3 +68,11 @@ type VOrganization = Organization & {
 	prev_id: number | null;
 	next_id: number | null;
 };
+
+type TParticipant = {
+	name: string,
+	hash?: string,
+	username?: string,
+}
+
+type TParticipants = TParticipant[]

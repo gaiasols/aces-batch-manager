@@ -32,6 +32,27 @@ export async function randomNamesWithPassword(c: Context, n = 20) {
 	return array;
 }
 
+export async function createParticipants(c: Context, participants: TParticipants) {
+	const array = [];
+
+
+	for (let i = 0; i < participants.length; i++) {
+		if (!participants[i].name.trim()) continue;
+		const username = participants[i]?.username?.trim() ?? (`${participants[i]?.name.toLocaleLowerCase().split(' ')[0].trim()}-${randomToken()}`)
+		const hash = await encrypt(participants[i]?.hash ?? randomToken(), c)
+		console.log({ name: participants[i].name, username, hash: participants[i].hash ?? randomToken() })
+		array.push({ name: participants[i].name, username, hash });
+	}
+
+	if (!isArrayUnique(array.map(x => x.username))) throw new Error("Username harus unik")
+
+	return array;
+}
+
+export function isArrayUnique(array: any[]) {
+	return new Set(array).size === array.length;
+}
+
 export async function getSessionUser(c: Context) {
 	const cookie = getCookie(c, c.env.COOKIE_NAME);
 	if (!cookie) return null;

@@ -2,7 +2,7 @@ import { html } from "hono/html";
 import { decrypt } from "./crypto";
 
 export const Pojo = (props: { obj: any }) => (
-	<pre class="max-h-64 bg-yellow-200/30 text-[12px] text-red-500 leading-4 overflow-x-auto my-5">{JSON.stringify(props.obj, null, 2)}</pre>
+	<pre class="max-h-64 bg-yellow-200/30 text-[12px] text-red-500 leading-4 overflow-x-auto my-5">{ JSON.stringify(props.obj, null, 2) }</pre>
 );
 
 export const LoginForm = (props: { username?: string; password?: string }) => (
@@ -14,13 +14,13 @@ export const LoginForm = (props: { username?: string; password?: string }) => (
 						Username:
 					</td>
 					<td class="pb-3">
-						<input class="w-full" type="text" name="username" placeholder="Your username" value={props.username} />
+						<input class="w-full" type="text" name="username" placeholder="Your username" value={ props.username } />
 					</td>
 				</tr>
 				<tr>
 					<td class="pr-4 pb-3">Password:</td>
 					<td class="pb-3">
-						<input class="w-full" type="password" name="password" placeholder="Your password" value={props.password} />
+						<input class="w-full" type="password" name="password" placeholder="Your password" value={ props.password } />
 					</td>
 				</tr>
 				<tr>
@@ -32,7 +32,7 @@ export const LoginForm = (props: { username?: string; password?: string }) => (
 			</table>
 		</form>
 		<p id="msg" class="h5 text-sm text-orange-600">
-			{props.username != undefined && '🤬 Username dan/atau password salah'}
+			{ props.username != undefined && '🤬 Username dan/atau password salah' }
 		</p>
 	</div>
 );
@@ -59,24 +59,24 @@ const SVGNext = () => (
 
 export const PrevNext = (props: { prev?: string; next?: string }) => (
 	<div class="flex gap-3">
-		{props.prev ? (
-			<a href={props.prev} class="w-5 hover:text-sky-500">
+		{ props.prev ? (
+			<a href={ props.prev } class="w-5 hover:text-sky-500">
 				<SVGPrev />
 			</a>
 		) : (
 			<div class="text-stone-300 w-5">
 				<SVGPrev />
 			</div>
-		)}
-		{props.next ? (
-			<a href={props.next} class="w-5 hover:text-sky-500">
+		) }
+		{ props.next ? (
+			<a href={ props.next } class="w-5 hover:text-sky-500">
 				<SVGNext />
 			</a>
 		) : (
 			<div class="text-stone-300 w-5">
 				<SVGNext />
 			</div>
-		)}
+		) }
 	</div>
 );
 
@@ -84,16 +84,16 @@ export const TableOrgs = (props: { orgs: any[] }) => (
 	<div>
 		<table class="w-full border-t border-stone-400">
 			<tbody id="daftar-org">
-				{props.orgs.map((o: any, i: number) => (
+				{ props.orgs.map((o: any, i: number) => (
 					<tr class="border-b border-stone-300">
-						<td class="pr-2 py-3">{i + 1}</td>
+						<td class="pr-2 py-3">{ i + 1 }</td>
 						<td class="pr-2 py-3">
-							<a href={`/orgs/${o.id}`}>{o.name}</a>
+							<a href={ `/orgs/${o.id}` }>{ o.name }</a>
 						</td>
 						<td class="pr-2 py-3">xxx</td>
 						<td class="py-3 ">xxxxx</td>
 					</tr>
-				))}
+				)) }
 			</tbody>
 		</table>
 	</div>
@@ -103,18 +103,18 @@ export const TableBatches = (props: { batches: VBatch[] }) => (
 	<div>
 		<table class="w-full border-t border-stone-500">
 			<tbody>
-				{props.batches.map((b: VBatch, i: number) => (
-					<tr id={`/batches/${b.id}`} class="batch border-b border-stone-300 cursor-pointer hover:text-sky-500">
-						<td class="w-8 pr-2 py-3">{i + 1}</td>
-						<td class="pr-2 py-3">{b.date}</td>
-						<td class="pr-2 py-3">{b.org_name}</td>
-						<td class="pr-2 py-3">{b.title}</td>
-						<td class="pr-2 py-3">{b.type == 'ASCENT' ? 'AC' : 'CT'}</td>
+				{ props.batches.map((b: VBatch, i: number) => (
+					<tr id={ `/batches/${b.id}` } class="batch border-b border-stone-300 cursor-pointer hover:text-sky-500">
+						<td class="w-8 pr-2 py-3">{ i + 1 }</td>
+						<td class="pr-2 py-3">{ b.date }</td>
+						<td class="pr-2 py-3">{ b.org_name }</td>
+						<td class="pr-2 py-3">{ b.title }</td>
+						<td class="pr-2 py-3">{ b.type == 'ASCENT' ? 'AC' : 'CT' }</td>
 					</tr>
-				))}
+				)) }
 			</tbody>
 		</table>
-		{html`<script>
+		{ html`<script>
 			document.querySelectorAll('tr.batch').forEach((tr) => {
 				tr.addEventListener('click', () => (document.location.href = tr.id));
 			});
@@ -126,15 +126,15 @@ export const TableModules = (props: { modules: Module[] }) => (
 	<div>
 		<table class="w-full border-t border-stone-400">
 			<tbody>
-				{props.modules.map((m: any, i: number) => (
+				{ props.modules.map((m: any, i: number) => (
 					<tr class="border-b border-stone-300">
-						<td class="pr-2 py-3">{i + 1}</td>
-						<td class="py-3 ">{m.title}</td>
-						<td class="text-sm text-stone-400 font-mono pr-2 py-3">{m.id}</td>
-						<td class="pr-2 py-3">{m.category}</td>
-						<td class="pr-2 py-3">{m.ascent ? '✅' : '-'}</td>
+						<td class="pr-2 py-3">{ i + 1 }</td>
+						<td class="py-3 ">{ m.title }</td>
+						<td class="text-sm text-stone-400 font-mono pr-2 py-3">{ m.id }</td>
+						<td class="pr-2 py-3">{ m.category }</td>
+						<td class="pr-2 py-3">{ m.ascent ? '✅' : '-' }</td>
 					</tr>
-				))}
+				)) }
 			</tbody>
 		</table>
 	</div>
@@ -144,14 +144,14 @@ export const TableAssessors = (props: { data: any[] }) => (
 	<div>
 		<table class="w-full border-t border-stone-400">
 			<tbody>
-				{props.data.map((m: any, i: number) => (
+				{ props.data.map((m: any, i: number) => (
 					<tr class="border-b border-stone-300">
-						<td class="pr-2 py-3">{i + 1}</td>
-						<td class="py-3 ">{m.fullname}</td>
-						<td class="pr-2 py-3">{m.username}</td>
-						<td class="text-sm text-right font-mono pr-2 py-3">{m.hash}</td>
+						<td class="pr-2 py-3">{ i + 1 }</td>
+						<td class="py-3 ">{ m.fullname }</td>
+						<td class="pr-2 py-3">{ m.username }</td>
+						<td class="text-sm text-right font-mono pr-2 py-3">{ m.hash }</td>
 					</tr>
-				))}
+				)) }
 			</tbody>
 		</table>
 	</div>
@@ -165,18 +165,18 @@ export const TableOrgBatches = (props: { batches: VBatch[] }) => {
 		<div id="org-batches">
 			<table class="w-full border-t border-stone-500">
 				<tbody>
-					{props.batches.map((b: any) => (
-						<tr id={`/batches/${b.id}`} class="batch border-b border-stone-300 cursor-pointer hover:text-sky-500">
-							<td class="w-28 pr-2 py-3">{b.date}</td>
-							<td class="pr-2 py-3">{b.type}</td>
-							<td class="pr-2 py-3">{b.title}</td>
+					{ props.batches.map((b: any) => (
+						<tr id={ `/batches/${b.id}` } class="batch border-b border-stone-300 cursor-pointer hover:text-sky-500">
+							<td class="w-28 pr-2 py-3">{ b.date }</td>
+							<td class="pr-2 py-3">{ b.type }</td>
+							<td class="pr-2 py-3">{ b.title }</td>
 							<td class="pr-2 py-3">23</td>
 							<td class="pr-2 py-3">9</td>
 						</tr>
-					))}
+					)) }
 				</tbody>
 			</table>
-			{html`<script>
+			{ html`<script>
 				document.querySelectorAll('tr.batch').forEach((tr) => {
 					tr.addEventListener('click', () => (document.location.href = tr.id));
 				});
@@ -212,7 +212,7 @@ export const FormNewBatch = (props: { org_id: string | number }) => (
 		</div>
 		<div id="fcnt" class="rounded bg-stone-50 border border-orange-300 px-6 py-4 my-6" style="display:none">
 			<form method="post">
-				<input type="hidden" name="org_id" value={props.org_id} />
+				<input type="hidden" name="org_id" value={ props.org_id } />
 				<div class="flex gap-3 mb-4">
 					<div class="flex flex-col gap-1">
 						<label class="text-sm font-medium">Tipe batch:</label>
@@ -238,7 +238,7 @@ export const FormNewBatch = (props: { org_id: string | number }) => (
 				</div>
 			</form>
 		</div>
-		{html`<script>
+		{ html`<script>
 			const btn1 = document.getElementById('btn1');
 			const btn2 = document.getElementById('btn2');
 			const btn3 = document.getElementById('btn3');
@@ -266,9 +266,9 @@ export const FormNewBatch = (props: { org_id: string | number }) => (
 export const BatchHero = (props: { batch: VBatch }) => (
 	<>
 		<div class="flex items-center gap-4 mt-10 mb-10">
-			<h1 class="flex-grow text-2xl text-sky-500 font-semibold tracking-tight">Batch # {props.batch.id}</h1>
+			<h1 class="flex-grow text-2xl text-sky-500 font-semibold tracking-tight">Batch # { props.batch.id }</h1>
 		</div>
-		<p class="font-bold -mt-10 mb-6">{props.batch.org_name}</p>
+		<p class="font-bold -mt-10 mb-6">{ props.batch.org_name }</p>
 	</>
 );
 
@@ -283,20 +283,20 @@ export const BatchMenu = (props: { batch_id: number; path: string }) => {
 	return (
 		<div class="border-b border-stone-300 my-8">
 			<div class="flex gap-5 text-[14px] text-gray-600 font-medium -mb-[2px]">
-				{menu.map((m) => {
+				{ menu.map((m) => {
 					const href = m.path == '/settings' ? `/batches/${batch_id}` : `/batches/${batch_id}${m.path}`;
 					if (path == m.path)
 						return (
-							<a class="border-b-2 border-sky-500 text-sky-500 pb-1" href={href}>
-								{m.label}
+							<a class="border-b-2 border-sky-500 text-sky-500 pb-1" href={ href }>
+								{ m.label }
 							</a>
 						);
 					return (
-						<a class="border-b-2 border-transparent hover:border-gray-500 hover:text-stone-700 pb-1" href={href}>
-							{m.label}
+						<a class="border-b-2 border-transparent hover:border-gray-500 hover:text-stone-700 pb-1" href={ href }>
+							{ m.label }
 						</a>
 					);
-				})}
+				}) }
 			</div>
 		</div>
 	);
@@ -311,15 +311,15 @@ export const SettingsInfo = (props: { batch: VBatch }) => (
 						<td width="26%" class="text-nowrap pt-2 pr-2">
 							Organization:
 						</td>
-						<td class="font-bold pt-2">{props.batch.org_name}</td>
+						<td class="font-bold pt-2">{ props.batch.org_name }</td>
 					</tr>
 					<tr>
 						<td class="text-nowrap pt-4 pr-2">Batch Type:</td>
-						<td class="font-bold pt-2">{props.batch.type}</td>
+						<td class="font-bold pt-2">{ props.batch.type }</td>
 					</tr>
 					<tr>
 						<td class="text-nowrap pt-4 pr-2">Date Created:</td>
-						<td class="font--bold pt-2">{props.batch.created}</td>
+						<td class="font--bold pt-2">{ props.batch.created }</td>
 					</tr>
 				</tbody>
 			</table>
@@ -333,7 +333,7 @@ export const SettingsDateTitle = (props: { batch: VBatch }) => (
 			<div class="absolute top-0 right-0">
 				<button
 					class="flex items-center justify-center w-5 h-5 text-stone-300 hover:text-stone-500 active:text-stone-700"
-					hx-get={`/batches/${props.batch.id}/form-date-title`}
+					hx-get={ `/batches/${props.batch.id}/form-date-title` }
 					hx-target="#date-title"
 					hx-swap="outerHTML"
 				>
@@ -348,19 +348,19 @@ export const SettingsDateTitle = (props: { batch: VBatch }) => (
 								Date:
 							</td>
 							<td class="pt-2">
-								<input readonly type="date" name="date" class="input w-36" value={props.batch.date} />
+								<input readonly type="date" name="date" class="input w-36" value={ props.batch.date } />
 							</td>
 						</tr>
 						<tr>
 							<td class="text-nowrap pt-2 pr-2">Title:</td>
 							<td class="pt-2">
-								<input readonly type="text" name="title" class="input" value={props.batch.title} />
+								<input readonly type="text" name="title" class="input" value={ props.batch.title } />
 							</td>
 						</tr>
 					</tbody>
 					<tbody id="B2" style="display:none">
 						<tr>
-							<td colspan={2} class="border-b border-stone-300 pt-4"></td>
+							<td colspan={ 2 } class="border-b border-stone-300 pt-4"></td>
 						</tr>
 						<tr>
 							<td></td>
@@ -380,7 +380,7 @@ export const FormSettingsDateTitle = (props: { batch: VBatch }) => (
 		<div class="relative ">
 			<form
 				class="text-[15px] pr-6 mb-0"
-				hx-post={`/batches/${props.batch.id}/date-title`}
+				hx-post={ `/batches/${props.batch.id}/date-title` }
 				hx-target="#date-title"
 				hx-swap="outerHTML"
 			>
@@ -391,19 +391,19 @@ export const FormSettingsDateTitle = (props: { batch: VBatch }) => (
 								Date:
 							</td>
 							<td class="pt-2">
-								<input type="date" name="date" class="input w-36" value={props.batch.date} />
+								<input type="date" name="date" class="input w-36" value={ props.batch.date } />
 							</td>
 						</tr>
 						<tr>
 							<td class="text-nowrap pt-2 pr-2">Title:</td>
 							<td class="pt-2">
-								<input type="text" name="title" class="input" value={props.batch.title} />
+								<input type="text" name="title" class="input" value={ props.batch.title } />
 							</td>
 						</tr>
 					</tbody>
 					<tbody id="B2">
 						<tr>
-							<td colspan={2} class="border-b border-stone-300 pt-4"></td>
+							<td colspan={ 2 } class="border-b border-stone-300 pt-4"></td>
 						</tr>
 						<tr>
 							<td></td>
@@ -412,7 +412,7 @@ export const FormSettingsDateTitle = (props: { batch: VBatch }) => (
 								<button
 									type="button"
 									class="button-hollow float-right"
-									hx-get={`/batches/${props.batch.id}/date-title`}
+									hx-get={ `/batches/${props.batch.id}/date-title` }
 									hx-target="#date-title"
 									hx-swap="outerHTML"
 								>
@@ -466,7 +466,7 @@ export const SettingsModules = (props: { batch: VBatch; modules: Module[]; selec
 				<div class="absolute top-0 right-0">
 					<button
 						class="flex items-center justify-center w-5 h-5 text-stone-300 hover:text-stone-500 active:text-stone-700"
-						hx-get={`/batches/${props.batch.id}/form-modules`}
+						hx-get={ `/batches/${props.batch.id}/form-modules` }
 						hx-target="#settings-modules"
 						hx-swap="outerHTML"
 					>
@@ -478,44 +478,44 @@ export const SettingsModules = (props: { batch: VBatch; modules: Module[]; selec
 						<tbody>
 							<tr>
 								<td width="26%" class="text-nowrap pt-2 pr-2">
-									{props.batch.type == 'ASCENT' ? 'Mod Selftest:' : 'Module # 1'}
+									{ props.batch.type == 'ASCENT' ? 'Mod Selftest:' : 'Module # 1' }
 								</td>
 								<td class="pt-2">
-									{props.batch.type == 'ASCENT' ? (
-										<input readonly class="input w-full" type="text" name="mod[]" value={ac_selections.SELF || '---'} />
+									{ props.batch.type == 'ASCENT' ? (
+										<input readonly class="input w-full" type="text" name="mod[]" value={ ac_selections.SELF || '---' } />
 									) : (
-										<input readonly class="input w-full" type="text" name="mod[]" value={cu_selections[0] || '---'} />
-									)}
-								</td>
-							</tr>
-							<tr>
-								<td class="text-nowrap pt-2 pr-2">{props.batch.type == 'ASCENT' ? 'Mod Case:' : 'Module # 2'}</td>
-								<td class="pt-2">
-									{props.batch.type == 'ASCENT' ? (
-										<input readonly class="input w-full" type="text" name="mod[]" value={ac_selections.CASE || '---'} />
-									) : (
-										<input readonly class="input w-full" type="text" name="mod[]" value={cu_selections[1] || '---'} />
-									)}
+										<input readonly class="input w-full" type="text" name="mod[]" value={ cu_selections[0] || '---' } />
+									) }
 								</td>
 							</tr>
 							<tr>
-								<td class="text-nowrap pt-2 pr-2">{props.batch.type == 'ASCENT' ? 'Mod Face2Face:' : 'Module # 3'}</td>
+								<td class="text-nowrap pt-2 pr-2">{ props.batch.type == 'ASCENT' ? 'Mod Case:' : 'Module # 2' }</td>
 								<td class="pt-2">
-									{props.batch.type == 'ASCENT' ? (
-										<input readonly class="input w-full" type="text" name="mod[]" value={ac_selections.FACE || '---'} />
+									{ props.batch.type == 'ASCENT' ? (
+										<input readonly class="input w-full" type="text" name="mod[]" value={ ac_selections.CASE || '---' } />
 									) : (
-										<input readonly class="input w-full" type="text" name="mod[]" value={cu_selections[2] || '---'} />
-									)}
+										<input readonly class="input w-full" type="text" name="mod[]" value={ cu_selections[1] || '---' } />
+									) }
 								</td>
 							</tr>
 							<tr>
-								<td class="text-nowrap pt-2 pr-2">{props.batch.type == 'ASCENT' ? 'Mod Discussion:' : 'Module # 4'}</td>
+								<td class="text-nowrap pt-2 pr-2">{ props.batch.type == 'ASCENT' ? 'Mod Face2Face:' : 'Module # 3' }</td>
 								<td class="pt-2">
-									{props.batch.type == 'ASCENT' ? (
-										<input readonly class="input w-full" type="text" name="mod[]" value={ac_selections.DISC || '---'} />
+									{ props.batch.type == 'ASCENT' ? (
+										<input readonly class="input w-full" type="text" name="mod[]" value={ ac_selections.FACE || '---' } />
 									) : (
-										<input readonly class="input w-full" type="text" name="mod[]" value={cu_selections[3] || '---'} />
-									)}
+										<input readonly class="input w-full" type="text" name="mod[]" value={ cu_selections[2] || '---' } />
+									) }
+								</td>
+							</tr>
+							<tr>
+								<td class="text-nowrap pt-2 pr-2">{ props.batch.type == 'ASCENT' ? 'Mod Discussion:' : 'Module # 4' }</td>
+								<td class="pt-2">
+									{ props.batch.type == 'ASCENT' ? (
+										<input readonly class="input w-full" type="text" name="mod[]" value={ ac_selections.DISC || '---' } />
+									) : (
+										<input readonly class="input w-full" type="text" name="mod[]" value={ cu_selections[3] || '---' } />
+									) }
 								</td>
 							</tr>
 						</tbody>
@@ -530,57 +530,57 @@ export const FormSettingsModules = (props: { batch: VBatch; modules: any[]; sele
 	<div id="settings-modules" class="rounded border border-stone-300 px-4 pr-2 pt-2 pb-3 my-5">
 		<form
 			class="text-[15px] pr-6 mb-0"
-			hx-post={`/batches/${props.batch.id}/modules`}
+			hx-post={ `/batches/${props.batch.id}/modules` }
 			hx-target="#settings-modules"
 			hx-swap="outerHTML"
 		>
-			<input type="hidden" name="batch_type" value={props.batch.type} />
+			<input type="hidden" name="batch_type" value={ props.batch.type } />
 			<table class="w-full">
 				<tbody>
 					<tr>
 						<td width="26%" class="text-nowrap pt-2 pr-2">
-							{props.batch.type == 'ASCENT' ? 'Mod Selftest:' : 'Module # 1'}
+							{ props.batch.type == 'ASCENT' ? 'Mod Selftest:' : 'Module # 1' }
 						</td>
 						<td class="pt-2">
-							{props.batch.type == 'ASCENT' ? (
-								<SelectModule cat="SELF" name="self" modules={props.modules} selections={props.selections} />
+							{ props.batch.type == 'ASCENT' ? (
+								<SelectModule cat="SELF" name="self" modules={ props.modules } selections={ props.selections } />
 							) : (
-								<SelectCustomModule index={0} name="module[]" modules={props.modules} selections={props.selections} />
-							)}
+								<SelectCustomModule index={ 0 } name="module[]" modules={ props.modules } selections={ props.selections } />
+							) }
 						</td>
 					</tr>
 					<tr>
-						<td class="text-nowrap pt-2 pr-2">{props.batch.type == 'ASCENT' ? 'Mod Case:' : 'Module # 2'}</td>
+						<td class="text-nowrap pt-2 pr-2">{ props.batch.type == 'ASCENT' ? 'Mod Case:' : 'Module # 2' }</td>
 						<td class="pt-2">
-							{props.batch.type == 'ASCENT' ? (
-								<SelectModule cat="CASE" name="case" modules={props.modules} selections={props.selections} />
+							{ props.batch.type == 'ASCENT' ? (
+								<SelectModule cat="CASE" name="case" modules={ props.modules } selections={ props.selections } />
 							) : (
-								<SelectCustomModule index={1} name="module[]" modules={props.modules} selections={props.selections} />
-							)}
+								<SelectCustomModule index={ 1 } name="module[]" modules={ props.modules } selections={ props.selections } />
+							) }
 						</td>
 					</tr>
 					<tr>
-						<td class="text-nowrap pt-2 pr-2">{props.batch.type == 'ASCENT' ? 'Mod Face2Face:' : 'Module # 3'}</td>
+						<td class="text-nowrap pt-2 pr-2">{ props.batch.type == 'ASCENT' ? 'Mod Face2Face:' : 'Module # 3' }</td>
 						<td class="pt-2">
-							{props.batch.type == 'ASCENT' ? (
-								<SelectModule cat="FACE" name="face" modules={props.modules} selections={props.selections} />
+							{ props.batch.type == 'ASCENT' ? (
+								<SelectModule cat="FACE" name="face" modules={ props.modules } selections={ props.selections } />
 							) : (
-								<SelectCustomModule index={2} name="module[]" modules={props.modules} selections={props.selections} />
-							)}
+								<SelectCustomModule index={ 2 } name="module[]" modules={ props.modules } selections={ props.selections } />
+							) }
 						</td>
 					</tr>
 					<tr>
-						<td class="text-nowrap pt-2 pr-2">{props.batch.type == 'ASCENT' ? 'Mod Discussion:' : 'Module # 4'}</td>
+						<td class="text-nowrap pt-2 pr-2">{ props.batch.type == 'ASCENT' ? 'Mod Discussion:' : 'Module # 4' }</td>
 						<td class="pt-2">
-							{props.batch.type == 'ASCENT' ? (
-								<SelectModule cat="DISC" name="disc" modules={props.modules} selections={props.selections} />
+							{ props.batch.type == 'ASCENT' ? (
+								<SelectModule cat="DISC" name="disc" modules={ props.modules } selections={ props.selections } />
 							) : (
-								<SelectCustomModule index={3} name="module[]" modules={props.modules} selections={props.selections} />
-							)}
+								<SelectCustomModule index={ 3 } name="module[]" modules={ props.modules } selections={ props.selections } />
+							) }
 						</td>
 					</tr>
 					<tr>
-						<td colspan={2} class="border-b border-stone-300 pt-4"></td>
+						<td colspan={ 2 } class="border-b border-stone-300 pt-4"></td>
 					</tr>
 					<tr>
 						<td></td>
@@ -589,7 +589,7 @@ export const FormSettingsModules = (props: { batch: VBatch; modules: any[]; sele
 							<button
 								type="button"
 								class="button-hollow float-right"
-								hx-get={`/batches/${props.batch.id}/modules`}
+								hx-get={ `/batches/${props.batch.id}/modules` }
 								hx-target="#settings-modules"
 								hx-swap="outerHTML"
 							>
@@ -609,31 +609,31 @@ const SelectModule = (props: { readonly?: boolean; name: string; cat: string; mo
 	const selections = props.selections.map((s) => s.split(':')[1]);
 	if (props.readonly)
 		return (
-			<select disabled name={props.name} class="w-full select pr-12">
+			<select disabled name={ props.name } class="w-full select pr-12">
 				<option value=""> - N/A</option>
-				{_modules.map((m: any) =>
+				{ _modules.map((m: any) =>
 					selections.includes(m.id) ? (
-						<option selected value={m.id}>
-							{m.title}
+						<option selected value={ m.id }>
+							{ m.title }
 						</option>
 					) : (
-						<option value={m.id}>{m.title}</option>
+						<option value={ m.id }>{ m.title }</option>
 					)
-				)}
+				) }
 			</select>
 		);
 	return (
-		<select name={props.name} class="w-full select pr-12">
+		<select name={ props.name } class="w-full select pr-12">
 			<option value=""> - N/A</option>
-			{_modules.map((m: any) =>
+			{ _modules.map((m: any) =>
 				selections.includes(m.id) ? (
-					<option selected value={m.id}>
-						{m.title}
+					<option selected value={ m.id }>
+						{ m.title }
 					</option>
 				) : (
-					<option value={m.id}>{m.title}</option>
+					<option value={ m.id }>{ m.title }</option>
 				)
-			)}
+			) }
 		</select>
 	);
 };
@@ -643,31 +643,31 @@ const SelectCustomModule = (props: { readonly?: boolean; name: string; index: nu
 	const selections = props.selections.map((s) => s.split(':')[1]);
 	if (readonly)
 		return (
-			<select disabled name={name} class="w-full select pr-12">
+			<select disabled name={ name } class="w-full select pr-12">
 				<option value=""> - N/A</option>
-				{modules.map((m: any) =>
+				{ modules.map((m: any) =>
 					selections[index] && selections[index] == m.id ? (
-						<option selected value={index + 1 + ':' + m.category + ':' + m.id}>
-							{m.title}
+						<option selected value={ index + 1 + ':' + m.category + ':' + m.id }>
+							{ m.title }
 						</option>
 					) : (
-						<option value={index + 1 + ':' + m.category + ':' + m.id}>{m.title}</option>
+						<option value={ index + 1 + ':' + m.category + ':' + m.id }>{ m.title }</option>
 					)
-				)}
+				) }
 			</select>
 		);
 	return (
-		<select name={name} class="w-full select pr-12">
+		<select name={ name } class="w-full select pr-12">
 			<option value=""> - N/A</option>
-			{modules.map((m: any) =>
+			{ modules.map((m: any) =>
 				selections[index] && selections[index] == m.id ? (
-					<option selected value={index + 1 + ':' + m.category + ':' + m.id}>
-						{m.title}
+					<option selected value={ index + 1 + ':' + m.category + ':' + m.id }>
+						{ m.title }
 					</option>
 				) : (
-					<option value={index + 1 + ':' + m.category + ':' + m.id}>{m.title}</option>
+					<option value={ index + 1 + ':' + m.category + ':' + m.id }>{ m.title }</option>
 				)
-			)}
+			) }
 		</select>
 	);
 };
@@ -677,17 +677,17 @@ export const DaftarPeserta = (props: { persons: any[] }) => (
 		<h3 class="text-stone-600 font-medium uppercase mb-3">Daftar Peserta Batch</h3>
 		<table class="w-full border-t border-stone-500">
 			<tbody>
-				{props.persons.map(async (p: any, i: number) => (
+				{ props.persons.map(async (p: any, i: number) => (
 					<tr class="border-b border-stone-300 cursor-pointer hover:text-sky-500">
-						<td class="w-8 pr-2 py-3">{i + 1}</td>
-						<td class="pr-2 py-3">{p.fullname}</td>
-						<td class="pr-2 py-3">{p.username}</td>
-						<td class="text-sm text-right font-mono pr-2 py-3">{p.hash}</td>
+						<td class="w-8 pr-2 py-3">{ i + 1 }</td>
+						<td class="pr-2 py-3">{ p.fullname }</td>
+						<td class="pr-2 py-3">{ p.username }</td>
+						<td class="text-sm text-right font-mono pr-2 py-3">{ p.hash }</td>
 					</tr>
-				))}
+				)) }
 			</tbody>
 		</table>
-		<Pojo obj={props.persons[props.persons.length - 1]} />
+		<Pojo obj={ props.persons[props.persons.length - 1] } />
 	</div>
 );
 
@@ -695,27 +695,79 @@ export const UploadPersonsCSV = (props: { batch: Batch | VBatch }) => (
 	<div>
 		<div class="rounded bg-stone-50 border border-stone-300 text--[15px] px-4 pt-2 pb-3">
 			<p class="mb-5">Belum ada data peserta.</p>
-			<form>
-				<input type="hidden" name="batch_id" value={props.batch.id} />
-				<button class="button">Upload Daftar Peserta</button>
+			<form method="post">
+				<input type="hidden" name="batch_id" value={ props.batch.id } />
+				<input type="hidden" name="org_id" value={ props.batch.org_id } />
+				<input type="hidden" name="participants" />
+				<div>
+					<input
+						id="csv"
+						name="csv"
+						type="file"
+						accept=".csv"
+						style="margin-left:0.25rem;"
+						class="mb-4"
+					/>
+				</div>
+				<button type="submit" id="process-upload" style="display:none;" />
+				<button type="button" id="before-upload" class="button">Upload Daftar Peserta</button>
 			</form>
 		</div>
 		<p class="mt-2">
-			🏀{' '}
+			🏀{ ' ' }
 			<a class="text-stone-600 hover:text-orange-500 hover:underline" href="#">
 				Download file template daftar peserta
 			</a>
 		</p>
-		{/* DEV ONLY */}
+		{/* DEV ONLY */ }
 		<p class="border-b border-stone-400 text-stone-400 text-center font-mono mt-8">DEV ONLY</p>
 		<form method="post" class="flex items-center justify-center mt-6">
-			<input type="hidden" name="batch_id" value={props.batch.id} />
-			<input type="hidden" name="org_id" value={props.batch.org_id} />
+			<input type="hidden" name="batch_id" value={ props.batch.id } />
+			<input type="hidden" name="org_id" value={ props.batch.org_id } />
 			<div class="flex gap-3 items-center">
 				<span>Create sample data:</span>
-				<input type="number" name="num" min={5} max={100} value={15} class="w-20 input" />
+				<input type="number" name="num" min={ 5 } max={ 100 } value={ 15 } class="w-20 input" />
 				<button class="button">Create</button>
 			</div>
 		</form>
+		{ html`
+			<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+			<script>
+				document.getElementById("before-upload").addEventListener("click", async (e) => {
+					function toJSON(file) {
+						return new Promise((resolve, reject) => {
+							const fr = new FileReader()
+							fr.onload = (e) => {
+								try {
+									const t = e.target.result
+									const x = (window?.Papa.parse(t))?.data ?? []
+									x.shift()
+									if(!x.length) return;
+									const y = x.map(v => ({
+										name: v[0],
+										hash: v?.[2]?.trim() ? v?.[2] : null,
+										username: v?.[1]?.trim() ? v?.[1] : null,
+									}))
+									return resolve(y)
+								} catch (error) {
+									reject(error)
+								}
+							}
+
+							fr.onerror = reject
+							fr.readAsText(file)
+						})
+					}
+
+					const file = document.getElementById("csv").files[0];
+					if(!file) return;
+
+					const participants = await toJSON(file)
+					console.log(participants)
+					document.querySelector("input[name=participants]").value = JSON.stringify(participants)
+					document.getElementById("process-upload").click()
+				})
+			</script>
+		`}
 	</div>
 );
