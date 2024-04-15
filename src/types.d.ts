@@ -188,3 +188,11 @@ type AssessorAllocation = {
 	face_slot4_size: number | null;
 	permutation: number;
 };
+
+type TParticipant = {
+	name: string;
+	hash?: string;
+	username?: string;
+};
+
+type TParticipants = TParticipant[];

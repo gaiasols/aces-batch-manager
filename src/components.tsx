@@ -1,4 +1,5 @@
 import { html } from "hono/html";
+import { Layout } from "./layout";
 
 export const Pojo = (props: { obj: any }) => (
 	<pre class="max-h-64 bg-yellow-200/30 text-[12px] text-red-500 leading-4 overflow-x-auto my-5">{JSON.stringify(props.obj, null, 2)}</pre>
@@ -306,6 +307,27 @@ export const BatchMenu = (props: { batch_id: number; path: string }) => {
 		</div>
 	);
 };
+
+export const BatchLayout = (props: { batch: VBatch; path: string; children?: any }) => (
+	<Layout>
+		<BatchHero batch={props.batch} />
+		<BatchMenu batch_id={props.batch.id} path={props.path} />
+		{props.children}
+	</Layout>
+);
+
+export const BatchNeedsRegrouping = (props: { batch: VBatch; path: string }) => (
+	<Layout>
+		<BatchHero batch={props.batch} />
+		<BatchMenu batch_id={props.batch.id} path={props.path} />
+		<div>
+			<p class="text-red-500 my-5">Batch ini telah mengalami perubahan yang memerlukan regrouping.</p>
+			<form method="post" action={`/batches/${props.batch.id}/regroup`}>
+				<button class="button">Regroup Batch</button>
+			</form>
+		</div>
+	</Layout>
+);
 
 export const SettingsInfo = (props: { batch: VBatch }) => (
 	<div class="rounded border border-stone-300 px-4 pt-2 pb-3 my-5">
@@ -635,9 +657,17 @@ export const UploadPersonsCSV = (props: { batch: Batch | VBatch }) => (
 	<div>
 		<div class="rounded bg-stone-50 border border-stone-300 text--[15px] px-4 pt-2 pb-3">
 			<p class="mb-5">Belum ada data peserta.</p>
-			<form>
+			<form method="post">
 				<input type="hidden" name="batch_id" value={props.batch.id} />
-				<button class="button">Upload Daftar Peserta</button>
+				<input type="hidden" name="org_id" value={props.batch.org_id} />
+				<input type="hidden" name="participants" />
+				<div>
+					<input id="csv" name="csv" type="file" accept=".csv" style="margin-left:0.25rem;" class="mb-4" />
+				</div>
+				<button type="submit" id="process-upload" style="display:none;" />
+				<button type="button" id="before-upload" class="button">
+					Upload Daftar Peserta
+				</button>
 			</form>
 		</div>
 		<p class="mt-2">
@@ -657,6 +687,45 @@ export const UploadPersonsCSV = (props: { batch: Batch | VBatch }) => (
 				<button class="button">Create</button>
 			</div>
 		</form>
+		{html`
+			<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+			<script>
+				document.getElementById('before-upload').addEventListener('click', async (e) => {
+					function toJSON(file) {
+						return new Promise((resolve, reject) => {
+							const fr = new FileReader();
+							fr.onload = (e) => {
+								try {
+									const t = e.target.result;
+									const x = window?.Papa.parse(t)?.data ?? [];
+									x.shift();
+									if (!x.length) return;
+									const y = x.map((v) => ({
+										name: v[0],
+										hash: v?.[2]?.trim() ? v?.[2] : null,
+										username: v?.[1]?.trim() ? v?.[1] : null,
+									}));
+									return resolve(y);
+								} catch (error) {
+									reject(error);
+								}
+							};
+
+							fr.onerror = reject;
+							fr.readAsText(file);
+						});
+					}
+
+					const file = document.getElementById('csv').files[0];
+					if (!file) return;
+
+					const participants = await toJSON(file);
+					console.log(participants);
+					document.querySelector('input[name=participants]').value = JSON.stringify(participants);
+					document.getElementById('process-upload').click();
+				});
+			</script>
+		`}
 	</div>
 );
 
