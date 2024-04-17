@@ -1,5 +1,6 @@
 import { html } from "hono/html";
 import { Layout } from "./layout";
+import { getAssessorReqs } from "./utils";
 
 export const Pojo = (props: { obj: any }) => (
 	<pre class="max-h-64 bg-yellow-200/30 text-[12px] text-red-500 leading-4 overflow-x-auto my-5">{JSON.stringify(props.obj, null, 2)}</pre>
@@ -831,3 +832,221 @@ export const DEV_TableRuntimeInfo = (props: { info: BatchRuntimeInfo, persons: n
 		</table>
 	);
 }
+
+export const Regroup = (props: { batch: VBatch }) => {
+	return (	
+		<Layout>
+			<BatchHero batch={props.batch} />
+			<BatchMenu batch_id={props.batch.id} path="/grouping" />
+			<div>
+				<p class="text-red-500 my-5">Batch ini telah mengalami perubahan yang memerlukan regrouping.</p>
+				<button class="button" hx-post={`/batches/${props.batch.id}/regroup`} hx-target="closest div" hx-swap="innerHTML">
+					Regroup Batch
+				</button>
+			</div>
+		</Layout>
+	
+	)
+}
+
+
+
+// =============================================================================================================
+// =============================================================================================================
+export const BatchRequirements = (props: { batch: VBatch; alloc: SlotsAlloc }) => {
+	const { batch, alloc } = props;
+	const isNeedAssessor = ((alloc: SlotsAlloc) => {
+		let currentAlloc = true;
+		for (let i = 1; i < 5; i++) {
+			if (!alloc[`face_slot${i}` as keyof typeof alloc]) {
+				if (alloc[`face_slot${i}` as keyof typeof alloc]! > 0) {
+					currentAlloc = false
+					break;
+				}
+			}
+			if (!alloc[`disc_slot${i}` as keyof typeof alloc]) {
+				if (alloc[`disc_slot${i}` as keyof typeof alloc]! > 0) {
+					currentAlloc = false
+					break;
+				}
+			}
+		}
+		return currentAlloc
+	})(alloc)
+
+	if (!batch.modules) return (
+		<div id="batch-assessors" style="margin:1rem 0">
+			<p>Modul belum ditetapkan: belum diketahui kebutuhan asesor.</p>
+		</div>
+	);
+	if (!isNeedAssessor) return (
+		<div id="batch-assessors" style="margin:1rem 0">
+			<p>Batch ini tidak membutuhkan asesor.</p>
+		</div>
+	);
+	if (batch.persons == 0) return (
+		<div id="batch-assessors" style="margin:1rem 0">
+			<p>Peserta belum ditetapkan: belum diketahui kebutuhan asesor.</p>
+		</div>
+	);
+	return <ReqsTable alloc={ alloc } />
+};
+
+export const ReqsTable = (props: { alloc: SlotsAlloc }) => {
+	const { minface, mindisc, maxface, maxdisc } = getAssessorReqs(props.alloc);
+	const V = (props: { n: number }) => {
+		if (props.n < 1) return <td class="p-3">0</td>;
+		return <td class="p-3">{ props.n }</td>;
+	};
+
+	return (
+		<table class="w-full">
+			<thead>
+				<tr class="border-b">
+					<th class="text-left p-3">Jenis Asesor</th>
+					<th class="text-left p-3">Minimum</th>
+					<th class="text-left p-3">Maksimum</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td class="p-3">Asesor Grup:</td>
+					<V n={ mindisc } />
+					<V n={ maxdisc } />
+				</tr>
+				<tr class="border-b">
+					<td class="p-3">Asesor Individu:</td>
+					<V n={ minface } />
+					<V n={ maxface } />
+				</tr>
+			</tbody>
+		</table>
+	);
+};
+
+export const AssessorAllocation = (props: { batch_id: number; type: string; minmax: Minmax; title: string; assessors: VBatchAssessor[] }) => {
+	const { batch_id, type, minmax, title, assessors } = props;
+	const parent_id = `${type}-assessors`;
+	const tray_id = `${type}-assessors-tray`;
+	const bucket_id = `${type}-assessors-bucket`;
+	const minimum = type == "disc" ? minmax.mindisc : minmax.minface;
+	const maximum = type == 'disc' ? minmax.maxdisc : minmax.maxface;
+
+	if (minimum == 0) return <></>
+	return (
+		<div id={ parent_id } class="mt-16">
+			<div style="display:flex;align-items:center;margin-bottom:.5rem">
+				<h3 style="flex-grow:1" class="font-bold">
+					{ title }: { minimum } - { maximum }
+				</h3>
+			</div>
+			<table class="assessor-allocation border-t w-full">
+				<tbody id={ tray_id }>
+					{ assessors.map((a) => (
+						<AllocationRow assessor={ a } type={ type as 'disc' | 'face' } />
+					)) }
+				</tbody>
+			</table>
+			<div id={ `${type}-load-bucket` }>
+				<button
+					class="bucket-loader mt-5 button-action py-3"
+					id={ `btn-${type}-load-bucket` }
+					hx-get={ `/batches/${batch_id}/assessors/${type}` }
+					hx-target={ `#${bucket_id}` }
+					hx-swap="innerHTML"
+				>
+					LOAD BUCKET
+				</button>
+			</div>
+			<div id={ bucket_id }></div>
+		</div>
+	);
+};
+
+
+export const AllocationRow = (props: { assessor: VBatchAssessor, type: 'face' | 'disc' }) => {
+	const { assessor: a, type } = props;
+
+	return (
+		<tr class="border-b" style="border-color:#cdd">
+			<td class="p-3">{ a.fullname }</td>
+			<td class="p-3">
+				<div class="flex gap-5 items-center justify-end">
+					<Av n={ a.slot1 } />
+					<Av n={ a.slot2 } />
+					<Av n={ a.slot3 } />
+					<Av n={ a.slot4 } />
+					<div class="flex gap-2 items-center">
+						<button
+							class="bg-gray-300 w-[30px] h-[30px] flex items-center justify-center rounded-lg"
+							hx-get={ `/batches/${a.batch_id}/assessors/${a.ass_id}/${type}?form=true` }
+							hx-target="closest tr"
+							hx-swap="outerHTML"
+						>
+							✎
+						</button>
+						<form hx-delete={ `/batches/${a.batch_id}/assessors/${a.type}` } hx-target="closest tr" hx-swap="outerHTML" class="m-0">
+							<input type="hidden" name="ass_id" value={ a.ass_id } />
+							<input type="hidden" name="type" value={ a.type } />
+							<button class="bg-gray-300 w-[30px] h-[30px] flex items-center justify-center rounded-lg">
+								X
+							</button>
+						</form>
+					</div>
+				</div>
+			</td>
+		</tr>
+	);
+};
+
+export const Av = (props: { n: number }) => {
+	return props.n == 0 || props.n == undefined ? (
+		<span style="width:15px;text-align:center">-</span>
+	) : (
+		<img src="/images/checked.png" style="width:15px;height:15px;margin-top:2px;opacity:0.65" />
+	);
+};
+
+export const FormAllocationRow = (props: { assessor: VBatchAssessor, type: string }) => {
+	const { assessor, type } = props;
+
+	const Ax = (props: { name: string; v: number }) => {
+		if (props.v == 0) return (
+			<input type="checkbox" name={ props.name } />
+		);
+		return (
+			<input type="checkbox" checked name={ props.name } />
+		);
+	};
+
+	return (
+		<tr class="border-b" style="border-color:#cdd">
+			<td class="p-3">{ assessor.fullname }</td>
+			<td class="px-3 py-4">
+				<form
+					class="flex gap-5 items-center justify-end m-0"
+					hx-put={ `/batches/${assessor.batch_id}/assessors/${assessor.ass_id}/${type}` }
+					hx-target="closest tr"
+					hx-swap="outerHTML"
+				>
+					<Ax name="slot1" v={ assessor.slot1 } />
+					<Ax name="slot2" v={ assessor.slot2 } />
+					<Ax name="slot3" v={ assessor.slot3 } />
+					<Ax name="slot4" v={ assessor.slot4 } />
+					<div style="display:flex;gap:.25rem">
+						<button class="bg-gray-300 w-[30px] h-[30px] flex items-center justify-center rounded-lg text-xs font-bold p-2">OK</button>
+						<button
+							class="bg-gray-300 w-[30px] h-[30px] flex items-center justify-center rounded-lg text-xs font-bold p-2"
+							type="button"
+							hx-get={ `/batches/${assessor.batch_id}/assessors/${assessor.ass_id}/${type}` }
+							hx-target="closest tr"
+							hx-swap="outerHTML"
+						>
+							ESC
+						</button>
+					</div>
+				</form>
+			</td>
+		</tr>
+	);
+};

@@ -11,7 +11,10 @@ import { app as batch } from "./batch";
 
 const app = new Hono<{ Bindings: Env }>();
 
+
+app.use('/images/*', serveStatic({ root: './' }));
 app.use('/static/*', serveStatic({ root: './' }));
+app.use('/asesor.js', serveStatic({ path: './asesor.js' }));
 app.use('/styles.css', serveStatic({ path: './styles.css' }));
 app.use('*', async (c, next) => {
 	const start = Date.now();

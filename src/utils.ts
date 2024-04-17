@@ -347,3 +347,27 @@ export async function createParticipants(c: Context, participants: TParticipants
 export function isArrayUnique(array: any[]) {
 	return new Set(array).size === array.length;
 }
+
+
+// ======================================================================================================
+// ======================================================================================================
+export function getAssessorReqs(alloc?: SlotsAlloc) {
+	if (!alloc) return { mindisc: 0, maxdisc: 0, minface: 0, maxface: 0 }
+	const mindisc = !alloc ? 0 : Math.max(alloc.disc_slot1, alloc.disc_slot2, alloc.disc_slot3, alloc.disc_slot4);
+	const maxdisc = !alloc ? 0 : [alloc.disc_slot1, alloc.disc_slot2, alloc.disc_slot3, alloc.disc_slot4].reduce((a, o) => { return a + o }, 0);
+	const minface = !alloc ? 0 : Math.max(alloc?.face_slot1_size ?? 0, alloc?.face_slot2_size ?? 0, alloc?.face_slot3_size ?? 0, alloc?.face_slot4_size ?? 0);
+	const maxface = !alloc ? 0 : [alloc?.face_slot1_size ?? 0, alloc?.face_slot2_size ?? 0, alloc?.face_slot3_size ?? 0, alloc?.face_slot4_size ?? 0].reduce((a, o) => { return a + o; }, 0);
+	return { mindisc, maxdisc, minface, maxface }
+}
+
+export async function getSlotPosition(DB: D1Database, batchId: string, type: 'DISC' | 'FACE' = 'FACE') {
+	const x = await DB.prepare(`SELECT * FROM v_groups WHERE batch_id=?`).bind(batchId).all()
+	return (x.results as unknown as VGroup[])
+		.reduce((acc, curr) => {
+			if (curr.slot1.includes(type)) (acc[`${curr.id}`] = 1)
+			if (curr.slot2.includes(type)) (acc[`${curr.id}`] = 2)
+			if (curr.slot3.includes(type)) (acc[`${curr.id}`] = 3)
+			if (curr.slot4.includes(type)) (acc[`${curr.id}`] = 4)
+			return acc
+		}, {} as GroupFacePosition)
+}
