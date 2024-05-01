@@ -150,9 +150,9 @@ CREATE TRIGGER update_groups AFTER UPDATE ON groups
 	BEGIN UPDATE groups SET updated = datetime('now')||'Z' WHERE id = NEW.id;
 END;
 
-CREATE TRIGGER update_groupings AFTER UPDATE ON groupings
-	BEGIN UPDATE groupings SET updated = datetime('now')||'Z' WHERE id = NEW.id;
-END;
+-- CREATE TRIGGER update_groupings AFTER UPDATE ON groupings
+-- 	BEGIN UPDATE groupings SET updated = datetime('now')||'Z' WHERE id = NEW.id;
+-- END;
 
 -- views
 
@@ -216,3 +216,24 @@ DROP VIEW IF EXISTS v_allocs; CREATE VIEW v_allocs AS SELECT
 	, (SELECT sum(members) FROM v_groups WHERE slot4 LIKE 'FACE:%' AND batch_id=g.batch_id) AS face_slot4_size
 	, (SELECT count (DISTINCT slot1||slot2||slot3||slot4) FROM groups WHERE batch_id=g.batch_id) AS permutation
 	FROM groups g GROUP BY batch_id;
+
+
+
+
+
+DROP TABLE IF EXISTS batch_assessors; CREATE TABLE batch_assessors (
+  [batch_id] INTEGER NOT NULL,
+  [ass_id] INTEGER NOT NULL,
+  [type] TEXT CHECK(type IN('face', 'disc', 'case')) NOT NULL,
+	[slot1] INTEGER CHECK(slot1 IN(0, 1)) NOT NULL DEFAULT 1,
+	[slot2] INTEGER CHECK(slot2 IN(0, 1)) NOT NULL DEFAULT 1,
+	[slot3] INTEGER CHECK(slot3 IN(0, 1)) NOT NULL DEFAULT 1,
+	[slot4] INTEGER CHECK(slot4 IN(0, 1)) NOT NULL DEFAULT 1,
+  PRIMARY KEY (batch_id, ass_id)
+);
+
+DROP VIEW IF EXISTS v_batch_assessors; CREATE VIEW v_batch_assessors AS SELECT
+	ba.*,
+	fullname, username, email
+	FROM batch_assessors ba
+	LEFT JOIN assessors a ON ba.ass_id=a.id;

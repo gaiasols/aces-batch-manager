@@ -1,7 +1,9 @@
-import { Hono } from "hono";
-import { BatchLayout, BatchNeedsRegrouping, DaftarPeserta, FormSettingsModules, Pojo, SettingsDateTitle, SettingsInfo, SettingsModules, TableGroupSlots, TableGroups, UploadPersonsCSV } from "./components";
-import { createParticipants, getBatch, getBatchRuntimeInfo, regroupAscentBatch, regroupCustomBatch } from "./utils";
-import { GET_DateTitle, GET_FormDateTitle, GET_FormModules, GET_Modules, POST_DateTitle, POST_Modules } from "./htmx";
+import { Context, Hono } from "hono";
+import { AssessorAllocation, BatchHero, BatchLayout, BatchMenu, BatchNeedsRegrouping, BatchRequirements, DaftarPeserta, FormSettingsModules, Pojo, Regroup, SettingsDateTitle, SettingsInfo, SettingsModules, TableGroupSlots, TableGroups, UploadPersonsCSV } from "./components";
+import { createParticipants, getAssessorReqs, getBatch, getBatchRuntimeInfo, regroupAscentBatch, regroupCustomBatch } from "./utils";
+import { Delete_AssessorListAllocation, GET_AssesorListAllocation, GET_DateTitle, GET_FormDateTitle, GET_FormModules, GET_IndividualSlotAssessorAllocation, GET_Modules, POST_AssessorListAllocation, POST_DateTitle, POST_Modules, PUT_IndividualSlotAssessorAllocation } from "./htmx";
+import { Layout } from "./layout";
+import { html } from "hono/html";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -80,32 +82,32 @@ app.get('/:batch_id/persons', async (c) => {
 	);
 });
 
-app.get('/:batch_id/assessors', async (c) => {
-	const batch_id = c.req.param('batch_id');
-	const batch = await getBatch(c.env.DB, batch_id);
-	if (!batch) return c.notFound();
-	const stm = 'SELECT * FROM v_allocs WHERE batch_id=?';
-	const rs = await c.env.DB.prepare(stm).bind(batch_id).first();
+// app.get('/:batch_id/assessors', async (c) => {
+// 	const batch_id = c.req.param('batch_id');
+// 	const batch = await getBatch(c.env.DB, batch_id);
+// 	if (!batch) return c.notFound();
+// 	const stm = 'SELECT * FROM v_allocs WHERE batch_id=?';
+// 	const rs = await c.env.DB.prepare(stm).bind(batch_id).first();
 
-	if (!rs || batch.regrouping ) return c.html(<BatchNeedsRegrouping batch={batch} path="/assessors" />);
+// 	if (!rs || batch.regrouping ) return c.html(<BatchNeedsRegrouping batch={batch} path="/assessors" />);
 
-	const alloc = rs as AssessorAllocation;
-	const req = {
-		min_disc: Math.max(alloc.disc_slot1, alloc.disc_slot2, alloc.disc_slot3, alloc.disc_slot4),
-		max_disc: [alloc.disc_slot1, alloc.disc_slot2, alloc.disc_slot3, alloc.disc_slot4].reduce((a, o) => { return a + o }, 0),
-		min_face: Math.max(alloc.face_slot1_size||0, alloc.face_slot2_size||0, alloc.face_slot3_size||0, alloc.face_slot4_size||0),
-		max_face: [alloc.face_slot1_size||0, alloc.face_slot2_size||0, alloc.face_slot3_size||0, alloc.face_slot4_size||0].reduce((a, o) => { return a + o; }, 0),
-	};
-	return c.html(
-		<BatchLayout batch={batch} path="/assessors">
-			<p class="-mb-2">Kebutuhan asesor</p>
-			<Pojo obj={req} />
-			<p class="-mb-2">Data v_allocs</p>
-			<Pojo obj={alloc} />
-			<Pojo obj={batch} />
-		</BatchLayout>
-	);
-});
+// 	const alloc = rs as AssessorAllocation;
+// 	const req = {
+// 		min_disc: Math.max(alloc.disc_slot1, alloc.disc_slot2, alloc.disc_slot3, alloc.disc_slot4),
+// 		max_disc: [alloc.disc_slot1, alloc.disc_slot2, alloc.disc_slot3, alloc.disc_slot4].reduce((a, o) => { return a + o }, 0),
+// 		min_face: Math.max(alloc.face_slot1_size||0, alloc.face_slot2_size||0, alloc.face_slot3_size||0, alloc.face_slot4_size||0),
+// 		max_face: [alloc.face_slot1_size||0, alloc.face_slot2_size||0, alloc.face_slot3_size||0, alloc.face_slot4_size||0].reduce((a, o) => { return a + o; }, 0),
+// 	};
+// 	return c.html(
+// 		<BatchLayout batch={batch} path="/assessors">
+// 			<p class="-mb-2">Kebutuhan asesor</p>
+// 			<Pojo obj={req} />
+// 			<p class="-mb-2">Data v_allocs</p>
+// 			<Pojo obj={alloc} />
+// 			<Pojo obj={batch} />
+// 		</BatchLayout>
+// 	);
+// });
 
 app.get('/:batch_id/grouping', async (c) => {
 	const batch_id = c.req.param('batch_id');
@@ -181,6 +183,58 @@ app.post('/:batch_id/regroup', async (c) => {
 	return c.redirect(ref);
 })
 
+app.get('/:batch_id/assessors', async (c: Context<{ Bindings: Env }>) => {
+	const id = c.req.param('batch_id');
+	const stm0 = `SELECT * FROM v_batches WHERE id=?`;
+	const stm1 = `SELECT s.* FROM batches b LEFT JOIN v_allocs s ON b.id=s.batch_id WHERE b.id=?`;
+	const stm2 = `SELECT * FROM v_batch_assessors WHERE batch_id=?`;
+	const stm3 = `SELECT * FROM assessors`;
+	const stm4 = `SELECT * FROM v_persons WHERE batch_id=?`;
+	const rs = await c.env.DB.batch([
+		/* 0 */ c.env.DB.prepare(stm0).bind(id),
+		/* 1 */ c.env.DB.prepare(stm1).bind(id),
+		/* 2 */ c.env.DB.prepare(stm2).bind(id),
+		/* 3 */ c.env.DB.prepare(stm3),
+		/* 4 */ c.env.DB.prepare(stm4).bind(id),
+	]);
+
+	if (!rs[0].results.length) return c.notFound();
+	const batch = rs[0].results[0] as VBatch;
+	if (batch.regrouping > 0) return c.html(<Regroup batch={ batch } />);
+
+	const alloc = rs[1].results[0] as SlotsAlloc;
+	const allocated = rs[2].results as VBatchAssessor[];
+
+	const face_assessors = allocated.filter((x) => x.type == 'face');
+	const disc_assessors = allocated.filter((x) => x.type == 'disc');
+
+	const { minface, mindisc, maxface, maxdisc } = getAssessorReqs(alloc);
+	console.log(alloc)
+	const minmax: Minmax = { minface, mindisc, maxface, maxdisc }
+
+	return c.html(
+		<Layout title={ `Batch #${batch.id} - Alokasi Asesor` } class="batch">
+			<BatchHero batch={ batch } />
+			<BatchMenu batch_id={ batch.id } path="/assessors" />
+			<div id="daftar-alokasi-assessor">
+				{ alloc && <BatchRequirements batch={ batch } alloc={ alloc } /> }
+				<AssessorAllocation batch_id={ batch.id } type="disc" minmax={ minmax } title="Asesor Grup" assessors={ disc_assessors } />
+				<AssessorAllocation batch_id={ batch.id } type="face" minmax={ minmax } title="Asesor Individu" assessors={ face_assessors } />
+				{ html`<script>
+					const TESTVAR = 'Badak Bercula';
+					const MIN_DISC = ${mindisc};
+					const MAX_DISC = ${maxdisc};
+					const MIN_F2F = ${minface};
+					const MAX_F2F = ${maxface};
+					const DISC_ASS_IDS = [${disc_assessors.map((x) => x.ass_id).join(',')}];
+					const F2F_ASS_IDS = [${face_assessors.map((x) => x.ass_id).join(',')}];
+				</script>`}
+				<script src="/asesor.js"></script>
+			</div>
+		</Layout>
+	);
+});
+
 /**
  * ========== HTMX Routes
  */
@@ -196,5 +250,11 @@ app.get('/:batch_id/modules', async (c) => GET_Modules(c));
 app.get('/:batch_id/form-modules', async (c) => GET_FormModules(c));
 
 app.post('/:batch_id/modules', async (c) => POST_Modules(c));
+
+app.get("/:batch_id/assessors/:type", GET_AssesorListAllocation)
+app.post("/:batch_id/assessors/:type", POST_AssessorListAllocation)
+app.delete("/:batch_id/assessors/:type", Delete_AssessorListAllocation)
+app.get('/:batch_id/assessors/:id/:type', GET_IndividualSlotAssessorAllocation)
+app.put('/:batch_id/assessors/:id/:type', PUT_IndividualSlotAssessorAllocation)
 
 export { app };

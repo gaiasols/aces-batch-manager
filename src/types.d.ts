@@ -196,3 +196,57 @@ type TParticipant = {
 };
 
 type TParticipants = TParticipant[];
+
+
+
+// ===============================================================================
+// ===============================================================================
+type Assessor = {
+	id: number;
+	hash: string;
+	fullname: string;
+	username: string;
+	email: string | null;
+}
+
+type SlotsAlloc = { // SlotsAlloc
+	batch_id: number;
+	permutation: number;
+	disc_slot1: number,
+	disc_slot2: number,
+	disc_slot3: number,
+	disc_slot4: number,
+	face_slot1: number,
+	face_slot2: number,
+	face_slot3: number,
+	face_slot4: number,
+	face_slot1_size: number | null,
+	face_slot2_size: number | null,
+	face_slot3_size: number | null,
+	face_slot4_size: number | null,
+}
+
+type BatchAssessor = {
+	batch_id: number;
+	ass_id: number;
+	type: string;
+	slot1: number;
+	slot2: number;
+	slot3: number;
+	slot4: number;
+}
+
+type VBatchAssessor = BatchAssessor & {
+	fullname: string;
+	username: string;
+	email: string | null;
+}
+
+type Minmax = {
+	mindisc: number;
+	maxdisc: number;
+	minface: number;
+	maxface: number;
+}
+
+type GroupFacePosition = Record<string, 1 | 2 | 3 | 4>
