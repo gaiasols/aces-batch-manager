@@ -4,6 +4,7 @@ import { FC } from "hono/jsx";
 export const Layout: FC = (props) => {
 	const title = props.title || 'Aces Batch Manager';
 	const refresh = props.refresh;
+
 	return (
 		<html>
 			<head>
@@ -11,6 +12,9 @@ export const Layout: FC = (props) => {
 				{props.refresh != undefined && <meta http-equiv="refresh" content={props.refresh} />}
 				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 				<link href="/styles.css" rel="stylesheet" />
+				{Array.isArray(props?.css) && props.css.map(v => (
+					<link href={v} rel="stylesheet" />
+				))}
 				<script
 					src="https://unpkg.com/htmx.org@1.9.10"
 					integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
@@ -19,7 +23,7 @@ export const Layout: FC = (props) => {
 				<script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
 			</head>
 			<body class="antialiased">
-				<div class="min-h-screen px-4 sm:px-5 pb-60">
+				<div class="min-h-screen px-4 sm:px-5 pb-60" id={props?.id}>
 					<Mainmenu />
 					<div class="max-w-2xl mx-auto">{props.children}</div>
 				</div>

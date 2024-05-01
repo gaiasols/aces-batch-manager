@@ -100,7 +100,9 @@ type Person = {
 	id: string;
 	org_id: number;
 	batch_id: number;
+	nip: string;
 	fullname: string;
+	jenis_kelamin: 'perempuan' | 'pr' | 'laki-laki' | 'lk';
 	username: string;
 	email: string | null;
 	hash: string | null;
@@ -191,6 +193,8 @@ type AssessorAllocation = {
 
 type TParticipant = {
 	name: string;
+	nip: string;
+	jenis_kelamin: 'perempuan' | 'pr' | 'laki-laki' | 'lk';
 	hash?: string;
 	username?: string;
 };

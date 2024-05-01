@@ -1,4 +1,4 @@
-(function(){
+function main(){
 	const LDG_BUCKET = document.getElementById("disc-assessors-bucket");
 	const DISC_LOADER = document.getElementById("disc-load-bucket");
 	const DISC_LOADER_BTN = document.getElementById("btn-disc-load-bucket");
@@ -16,6 +16,22 @@
 	if (DISC_IDS.length < MAX_DISC) DISC_LOADER.style.display = "block";
 	if (F2F_IDS.length < MAX_F2F) F2F_LOADER.style.display = "block";
 
+	function countAssessorDebounce() {
+		let timeDebounce = null
+		
+		return () => {
+			if(timeDebounce) clearTimeout(timeDebounce)				
+			timeDebounce = setTimeout(() => {
+				const assessorDiscCount = document.querySelectorAll("#disc-assessors table.assessor-allocation tr")
+				const assessorFaceCount = document.querySelectorAll("#face-assessors table.assessor-allocation tr")
+				console.log("pppp")
+				document.querySelector('#assessor-count-disc .count').innerHTML = assessorDiscCount.length
+				document.querySelector('#assessor-count-face .count').innerHTML = assessorFaceCount.length
+			}, 500);
+		}
+	}
+
+	const countAssessor = countAssessorDebounce()
 
 	// SSE "bucket-loaded"
 	document.body.addEventListener('bucket-loaded', function (ev) {
@@ -67,6 +83,9 @@
 		console.log("ev.detail", ev.detail);
 		console.log("face", F2F_IDS)
 		console.log("disc", DISC_IDS)
+
+		countAssessor()
+
 		const elm = document.getElementById('A-' + ev.detail.ass_id)
 		if (elm) elm.classList.add('text-red-600');
 		// minmax();
@@ -96,6 +115,8 @@
 		console.log(DISC_IDS)
 		console.log(F2F_IDS)
 
+		countAssessor()
+
 		// No need to check max
 
 		// Update bucket item if bucket exists
@@ -124,5 +145,10 @@
 	}
 
 	// minmax();
+	countAssessor()
 	/* EOF */
-}())
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+	main()
+})
