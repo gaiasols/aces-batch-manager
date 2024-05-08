@@ -536,8 +536,8 @@ export async function PUT_PersonEditor(c: Context<{ Bindings: Env }>) {
 	if (!["perempuan", "pr", "laki-laki", "lk"].includes(body.jenis_kelamin.trim().toLocaleLowerCase())) return c.html("Jenis kelamin tidak valid", 400)
 
 	const [uname, nip] = await c.env.DB.batch([
-		c.env.DB.prepare("SELECT id FROM persons WHERE username = ? AND id IS NOT ?").bind(body.username, personId),
-		c.env.DB.prepare("SELECT id FROM persons WHERE nip = ? AND id IS NOT ?").bind(body.nip, personId),
+		c.env.DB.prepare("SELECT id FROM persons WHERE username = ? AND batch_id = ? AND id IS NOT ?").bind(body.username, batchId, personId),
+		c.env.DB.prepare("SELECT * FROM persons WHERE nip = ? AND batch_id = ? AND id IS NOT ?").bind(body.nip, batchId, personId),
 	])
 
 	if (uname.results.length > 0) return c.html("Username is not available", 400)
@@ -679,8 +679,6 @@ export async function PUT_AssessorEditor(c: Context<{ Bindings: Env }>) {
 		c.env.DB.prepare("SELECT id FROM assessors WHERE username = ? AND id IS NOT ?").bind(body.username, assessorId),
 		c.env.DB.prepare("SELECT id FROM assessors WHERE email = ? AND id IS NOT ?").bind(body.email, assessorId),
 	])
-
-	console.log(body)
 
 	if (uname.results.length > 0) return c.html("Username is not available", 400)
 	if (email.results.length > 0) return c.html("Email is not available", 400)

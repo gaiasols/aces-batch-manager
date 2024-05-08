@@ -204,7 +204,7 @@ app.get('/modules', async (c) => {
 				<button class="button bg-blue-600" id="button-form-show">New</button>
 			</div>
 			<form
-				class="module-editor py-5 mb-10"
+				class="module-editor py-5 mb-10 hidden"
 				hx-post={ `/modules` }
 				hx-target={ `table` }
 				hx-swap="afterbegin"
