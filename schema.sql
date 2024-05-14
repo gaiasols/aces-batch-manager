@@ -86,6 +86,8 @@ DROP TABLE IF EXISTS persons; CREATE TABLE persons (
 	, [fullname] TEXT NOT NULL
 	, [username] TEXT NOT NULL
 	, [email] TEXT
+	, [jenis_kelamin] TEXT
+	, [nip] TEXT
 	, [hash] TEXT
 	, [created] TEXT NOT NULL DEFAULT (datetime('now')||'Z')
 	, [updated] TEXT

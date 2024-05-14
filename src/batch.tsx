@@ -1,7 +1,7 @@
 import { Context, Hono } from "hono";
-import { AssessorAllocation, BatchHero, BatchLayout, BatchMenu, BatchNeedsRegrouping, BatchRequirements, DaftarPeserta, FormSettingsModules, Pojo, Regroup, SettingsDateTitle, SettingsInfo, SettingsModules, TableGroupSlots, TableGroups, UploadPersonsCSV } from "./components";
-import { createParticipants, getAssessorReqs, getBatch, getBatchRuntimeInfo, regroupAscentBatch, regroupCustomBatch } from "./utils";
-import { Delete_AssessorListAllocation, GET_AssesorListAllocation, GET_DateTitle, GET_FormDateTitle, GET_FormModules, GET_IndividualSlotAssessorAllocation, GET_Modules, POST_AssessorListAllocation, POST_DateTitle, POST_Modules, PUT_IndividualSlotAssessorAllocation } from "./htmx";
+import { AssessorAllocation, BatchHero, BatchLayout, BatchMenu, BatchNeedsRegrouping, BatchRequirements, DaftarPeserta, FormSettingsModules, PairingF2FAssessorWithParticipant, PairingGroupAssessorWithParticipant, Pojo, Regroup, SettingsDateTitle, SettingsInfo, SettingsModules, TableGroupSlots, TableGroups, UploadPersonsCSV } from "./components";
+import { createParticipants, getAssessorReqs, getBatch, getBatchRuntimeInfo, getSlotPosition, regroupAscentBatch, regroupCustomBatch } from "./utils";
+import { DELETE_PersonEditor, Delete_AssessorListAllocation, GET_AssesorListAllocation, GET_DateTitle, GET_FormDateTitle, GET_FormModules, GET_IndividualSlotAssessorAllocation, GET_Modules, GET_PersonEditor, POST_AssessorListAllocation, POST_DateTitle, POST_Modules, PUT_DISCAssessorParticipantPairing, PUT_FACEAssessorParticipantPairing, PUT_IndividualSlotAssessorAllocation, PUT_PersonEditor } from "./htmx";
 import { Layout } from "./layout";
 import { html } from "hono/html";
 
@@ -47,7 +47,7 @@ app.post('/:batch_id/persons', async (c) => {
 	}
 	const names = await createParticipants(c, JSON.parse(participants as string));
 	const persons = names.map(
-		(n, i) => `('${batch_id}-${String(i + 1).padStart(4, '0')}', ${org_id}, ${batch_id}, '${n.name}', '${n.username}', '${n.hash}')`
+		(n, i) => `('${batch_id}-${String(i + 1).padStart(4, '0')}', ${org_id}, ${batch_id}, '${n.name}', '${n.username}', '${n.hash}', '${n.jenis_kelamin}', '${n.nip}')`
 	);
 	console.log('names', names);
 	// const names = await randomNamesWithPassword(c, parseInt(num as string));
@@ -55,7 +55,7 @@ app.post('/:batch_id/persons', async (c) => {
 	// 	(n, i) => `('${batch_id}-${String(i + 1).padStart(4, '0')}', ${org_id}, ${batch_id}, '${n.name}', '${n.username}', '${n.hash}')`
 	// );
 	const stm0 = 'DELETE FROM persons WHERE batch_id=?';
-	const stm1 = `INSERT INTO persons (id, org_id, batch_id, fullname, username, hash) VALUES ${persons.join(', ')}`;
+	const stm1 = `INSERT INTO persons (id, org_id, batch_id, fullname, username, hash, jenis_kelamin, nip) VALUES ${persons.join(', ')}`;
 	const stm2 = 'UPDATE batches SET regrouping=1 WHERE id=?';
 	await c.env.DB.batch([ //
 		c.env.DB.prepare(stm0).bind(batch_id),
@@ -71,7 +71,7 @@ app.get('/:batch_id/persons', async (c) => {
 	if (!batch) return c.notFound();
 	const stm0 = 'SELECT * FROM persons WHERE batch_id=?';
 	const rs = await c.env.DB.prepare(stm0).bind(batch_id).all();
-	const persons = rs.results;
+	const persons = rs.results as Person[];
 	return c.html(
 		<BatchLayout batch={batch} path="/persons">
 			<div id="daftar-peserta">
@@ -81,33 +81,6 @@ app.get('/:batch_id/persons', async (c) => {
 		</BatchLayout>
 	);
 });
-
-// app.get('/:batch_id/assessors', async (c) => {
-// 	const batch_id = c.req.param('batch_id');
-// 	const batch = await getBatch(c.env.DB, batch_id);
-// 	if (!batch) return c.notFound();
-// 	const stm = 'SELECT * FROM v_allocs WHERE batch_id=?';
-// 	const rs = await c.env.DB.prepare(stm).bind(batch_id).first();
-
-// 	if (!rs || batch.regrouping ) return c.html(<BatchNeedsRegrouping batch={batch} path="/assessors" />);
-
-// 	const alloc = rs as AssessorAllocation;
-// 	const req = {
-// 		min_disc: Math.max(alloc.disc_slot1, alloc.disc_slot2, alloc.disc_slot3, alloc.disc_slot4),
-// 		max_disc: [alloc.disc_slot1, alloc.disc_slot2, alloc.disc_slot3, alloc.disc_slot4].reduce((a, o) => { return a + o }, 0),
-// 		min_face: Math.max(alloc.face_slot1_size||0, alloc.face_slot2_size||0, alloc.face_slot3_size||0, alloc.face_slot4_size||0),
-// 		max_face: [alloc.face_slot1_size||0, alloc.face_slot2_size||0, alloc.face_slot3_size||0, alloc.face_slot4_size||0].reduce((a, o) => { return a + o; }, 0),
-// 	};
-// 	return c.html(
-// 		<BatchLayout batch={batch} path="/assessors">
-// 			<p class="-mb-2">Kebutuhan asesor</p>
-// 			<Pojo obj={req} />
-// 			<p class="-mb-2">Data v_allocs</p>
-// 			<Pojo obj={alloc} />
-// 			<Pojo obj={batch} />
-// 		</BatchLayout>
-// 	);
-// });
 
 app.get('/:batch_id/grouping', async (c) => {
 	const batch_id = c.req.param('batch_id');
@@ -138,6 +111,7 @@ app.get('/:batch_id/grouping', async (c) => {
 			<p class="">Belum ada data peserta dan/atau data modul.</p>
 		</BatchLayout>
 	);
+
 
 	const info = getBatchRuntimeInfo(modules, batch.id, batch.type, batch.split);
 	return c.html(
@@ -200,7 +174,7 @@ app.get('/:batch_id/assessors', async (c: Context<{ Bindings: Env }>) => {
 
 	if (!rs[0].results.length) return c.notFound();
 	const batch = rs[0].results[0] as VBatch;
-	if (batch.regrouping > 0) return c.html(<Regroup batch={ batch } />);
+	if (batch.regrouping > 0) return c.html(<Regroup batch={ batch } path="/assessors" />);
 
 	const alloc = rs[1].results[0] as SlotsAlloc;
 	const allocated = rs[2].results as VBatchAssessor[];
@@ -211,7 +185,7 @@ app.get('/:batch_id/assessors', async (c: Context<{ Bindings: Env }>) => {
 	const { minface, mindisc, maxface, maxdisc } = getAssessorReqs(alloc);
 	console.log(alloc)
 	const minmax: Minmax = { minface, mindisc, maxface, maxdisc }
-
+	
 	return c.html(
 		<Layout title={ `Batch #${batch.id} - Alokasi Asesor` } class="batch">
 			<BatchHero batch={ batch } />
@@ -231,6 +205,71 @@ app.get('/:batch_id/assessors', async (c: Context<{ Bindings: Env }>) => {
 				</script>`}
 				<script src="/asesor.js"></script>
 			</div>
+		</Layout>
+	);
+});
+
+app.get('/:batch_id/preps', async (c: Context<{ Bindings: Env }>) => {
+	function renderGroupAssessors(vGroups: VGroup[], VBatchAssessor: VBatchAssessor[]) {
+		return (
+			<>
+				<h3 class="font-bold">Asesor DISC</h3>
+				<table class="mt-5 w-full">
+					<PairingGroupAssessorWithParticipant vGroups={ vGroups } VBatchAssessor={ VBatchAssessor } />
+				</table>
+			</>
+		)
+	}
+
+
+	function renderF2FAssessors(vPersons: VPerson[], VBatchAssessor: VBatchAssessor[], groupFacePosition: GroupFacePosition) {
+		return (
+			<>
+				<h3 class="font-bold mt-16">Asesor F2F</h3>
+				<table class="mt-5 w-full">
+					<PairingF2FAssessorWithParticipant vPersons={ vPersons } VBatchAssessor={ VBatchAssessor } groupFacePosition={ groupFacePosition } />
+				</table>
+			</>
+		)
+	}
+
+	const id = c.req.param('batch_id');
+	const stm0 = `SELECT * FROM v_batches WHERE id=?`;
+	const stm1 = `SELECT * FROM v_groups WHERE batch_id=?`;
+	const stm2 = `SELECT * FROM v_batch_assessors WHERE type='disc' AND batch_id=?`;
+	const stm3 = `SELECT * FROM v_persons WHERE batch_id=?`;
+	const stm4 = `SELECT * FROM v_batch_assessors WHERE type='face' AND batch_id=?`;
+	const rs = await c.env.DB.batch([
+		/* 0 */ c.env.DB.prepare(stm0).bind(id),
+		/* 1 */ c.env.DB.prepare(stm1).bind(id),
+		/* 2 */ c.env.DB.prepare(stm2).bind(id),
+		/* 3 */ c.env.DB.prepare(stm3).bind(id),
+		/* 4 */ c.env.DB.prepare(stm4).bind(id),
+	]);
+
+	const batch = rs[0].results[0] as VBatch;
+	if (!batch) return c.notFound();
+
+	const groupFacePosition = await getSlotPosition(c.env.DB, id);
+	const groupAssessorsToRender = renderGroupAssessors(rs[1].results as VGroup[], rs[2].results as VBatchAssessor[]);
+	const F2FAssessorsToRender = renderF2FAssessors(rs[3].results as VPerson[], rs[4].results as VBatchAssessor[], groupFacePosition);
+
+	return c.html(
+		<Layout title={ `Batch #${batch.id} - Preparasi` } class="batch">
+			<BatchHero batch={ batch } />
+			<BatchMenu batch_id={ batch.id } path="/preps" />
+			{ groupAssessorsToRender }
+			{ F2FAssessorsToRender }
+			{/* { batch.need_assessors
+				? (
+					<>
+						<a href={ `/bat/${batch.id}/preps/asesor` } style="margin-bottom:30px;display:block;">Alokasi Assessor</a>
+						{ batch.mod_disc && groupAssessorsToRender }
+						{ batch.mod_face && F2FAssessorsToRender }
+					</>
+				) : 
+				<p>Batch ini tidak membutuhkan asesor.</p> */}
+			<script src="/static/js/preps.js"></script>
 		</Layout>
 	);
 });
@@ -256,5 +295,12 @@ app.post("/:batch_id/assessors/:type", POST_AssessorListAllocation)
 app.delete("/:batch_id/assessors/:type", Delete_AssessorListAllocation)
 app.get('/:batch_id/assessors/:id/:type', GET_IndividualSlotAssessorAllocation)
 app.put('/:batch_id/assessors/:id/:type', PUT_IndividualSlotAssessorAllocation)
+
+app.get("/:batch_id/persons/:person_id", GET_PersonEditor)
+app.put("/:batch_id/persons/:person_id", PUT_PersonEditor)
+app.delete("/:batch_id/persons/:person_id", DELETE_PersonEditor)
+
+app.put('/:batch_id/preps/assessor-participant/disc/:group_id', PUT_DISCAssessorParticipantPairing)
+app.put('/:batch_id/preps/assessor-participant/face/:person_id', PUT_FACEAssessorParticipantPairing)
 
 export { app };

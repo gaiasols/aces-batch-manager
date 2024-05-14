@@ -336,10 +336,17 @@ export async function createParticipants(c: Context, participants: TParticipants
 			participants[i]?.username?.trim() ?? `${participants[i]?.name.toLocaleLowerCase().split(' ')[0].trim()}-${randomToken()}`;
 		const hash = await encrypt(participants[i]?.hash ?? randomToken(), c);
 		console.log({ name: participants[i].name, username, hash: participants[i].hash ?? randomToken() });
-		array.push({ name: participants[i].name, username, hash });
+		array.push({ 
+			nip: participants[i].nip,
+			name: participants[i].name, 
+			jenis_kelamin: participants[i].jenis_kelamin,
+			username, 
+			hash,
+		});
 	}
 
 	if (!isArrayUnique(array.map((x) => x.username))) throw new Error('Username harus unik');
+	if (!isArrayUnique(array.map((x) => x.nip))) throw new Error('NIP harus unik');
 
 	return array;
 }

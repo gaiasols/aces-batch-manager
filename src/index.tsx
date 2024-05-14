@@ -8,6 +8,7 @@ import { deleteCookie, setCookie } from "hono/cookie";
 import { decrypt } from "./crypto";
 import { html } from "hono/html";
 import { app as batch } from "./batch";
+import { GET_AssessorEditor, GET_ModuleEditor, POST_AssessorEditor, POST_ModuleEditor, PUT_AssessorEditor, PUT_ModuleEditor } from "./htmx";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -16,12 +17,14 @@ app.use('/images/*', serveStatic({ root: './' }));
 app.use('/static/*', serveStatic({ root: './' }));
 app.use('/asesor.js', serveStatic({ path: './asesor.js' }));
 app.use('/styles.css', serveStatic({ path: './styles.css' }));
+
 app.use('*', async (c, next) => {
 	const start = Date.now();
 	await next();
 	const end = Date.now();
 	c.res.headers.set('X-Response-Time', `${end - start}`);
 });
+
 app.use('*', async (c, next) => {
 	const pathname = new URL(c.req.raw.url).pathname;
 	const paths = ['/orgs', '/batches', '/modules', '/assessors', '/admin'];
@@ -60,11 +63,11 @@ app.post('/login', async (c) => {
 	const found: any = await c.env.DB.prepare(stm).bind(username).first();
 
 	// Not found
-	if (!found) return c.html(<LoginForm username={username} password={password} />);
+	if (!found) return c.html(<LoginForm username={ username } password={ password } />);
 	console.log(found);
 	// Incorrect password
 	const decrypted = await decrypt(found.hash, c);
-	if (password != decrypted) return c.html(<LoginForm username={username} password={password} />);
+	if (password != decrypted) return c.html(<LoginForm username={ username } password={ password } />);
 
 	// Create cookie
 	const user: Admin = {
@@ -98,7 +101,7 @@ app.get('/names', async (c) => {
 	const names = await randomNamesWithPassword(c, 20)
 	return c.html(
 		<Layout>
-			<Pojo obj={names} />
+			<Pojo obj={ names } />
 		</Layout>
 	);
 });
@@ -122,8 +125,8 @@ app.get('/orgs', async (c) => {
 				</div>
 			</div>
 			<FormNewOrg />
-			<TableOrgs orgs={rs.results} />
-			{html`<script>
+			<TableOrgs orgs={ rs.results } />
+			{ html`<script>
 				const btn1 = document.getElementById('btn1');
 				const btn2 = document.getElementById('btn2');
 				const btn3 = document.getElementById('btn3');
@@ -162,9 +165,9 @@ app.post('/orgs', async (c) => {
 	c.res.headers.append('HX-Trigger', 'org-added');
 	return c.html(
 		<tr class="border-b border-stone-300">
-			<td class="pr-2 py-3">{len}</td>
+			<td class="pr-2 py-3">{ len }</td>
 			<td class="pr-2 py-3">
-				<a href={`/orgs/${org.id}`}>{org.name}</a>
+				<a href={ `/orgs/${org.id}` }>{ org.name }</a>
 			</td>
 			<td class="pr-2 py-3">xxx</td>
 			<td class="py-3 ">xxxxx</td>
@@ -181,7 +184,7 @@ app.get('/batches', async (c) => {
 			<div class="flex items-center gap-4 mt-10 mb-10">
 				<h1 class="flex-grow text-2xl font-semibold tracking-tight">Daftar Batch</h1>
 			</div>
-			<TableBatches batches={batches} />
+			<TableBatches batches={ batches } />
 		</Layout>
 	);
 });
@@ -190,25 +193,171 @@ app.get('/modules', async (c) => {
 	const stm = 'SELECT * FROM modules ORDER BY ascent DESC';
 	const rs = await c.env.DB.prepare(stm).all();
 	const modules = rs.results as AcesModule[];
+	
+	const idEr = `id${randomToken()}`
+
+
 	return c.html(
 		<Layout>
 			<div class="flex items-center gap-4 my-10">
 				<h1 class="flex-grow text-2xl font-semibold tracking-tight">Daftar Modul</h1>
+				<button class="button bg-blue-600" id="button-form-show">New</button>
 			</div>
-			<TableModules modules={modules} />
+			<form
+				class="module-editor py-5 mb-10 hidden"
+				hx-post={ `/modules` }
+				hx-target={ `table` }
+				hx-swap="afterbegin"
+				id="form-new"
+			>
+				<div class="flex gap-5 input-container">
+					<div class="w-full">
+						<label for="category" class="block text-sm font-medium leading-6 text-gray-900">Category <span class="text-red-600">*</span></label>
+						<div class="mt-2">
+							<select name="category" id="category" class="w-full">
+								<option value="SELF">SELF</option>
+								<option value="CASE">CASE</option>
+								<option value="FACE">FACE</option>
+								<option value="DISC">DISC</option>
+							</select>
+						</div>
+					</div>
+				</div>
+				<div class="flex gap-5 input-container mt-2">
+					<div class="w-full">
+						<label for="type" class="block text-sm font-medium leading-6 text-gray-900">Type <span class="text-red-600">*</span></label>
+						<div class="mt-2">
+							<input class="w-full" type="text" name="type" id="type" required placeholder="GPQ-01" />
+						</div>
+					</div>
+					<div class="w-full">
+						<label for="title" class="block text-sm font-medium leading-6 text-gray-900">Title <span class="text-red-600">*</span></label>
+						<div class="mt-2">
+							<input class="w-full" type="text" name="title" id="title" required />
+						</div>
+					</div>
+				</div>
+				<div class="flex gap-5 input-container mt-5">
+					<div class="w-full flex items-center">
+						<div>
+							<input type="checkbox" name="ascent" id="ascent" />
+						</div>
+						<label for="ascent" class="block ml-2 -mt-[2px] text-sm font-medium leading-6 text-gray-900">Assessment Center</label>
+					</div>
+				</div>
+				<div class="flex input-container mt-2 justify-center">
+					<span class="text-center text-red-600 font-semibold" id={ idEr }></span>
+				</div>
+				<div class="flex input-container gap-3 mt-5 justify-end">
+					<button type="button" class="button bg-transparent text-black active:bg-transparent" id="button-form-cancel">
+						Cancel
+					</button>
+					<button class="button">Submit</button>
+				</div>
+			</form>
+			<TableModules modules={ modules } />
+			{ html`
+				<script>
+					document.addEventListener("DOMContentLoaded", () => {
+						document.getElementById("form-new").addEventListener("htmx:responseError", e => {
+							document.getElementById("${idEr}").innerText = e.detail.xhr.responseText
+						})
+						document.getElementById("button-form-cancel").addEventListener("click", () => {
+							document.getElementById("form-new").classList.add("hidden")
+							document.getElementById("form-new").reset()
+						})
+						document.getElementById("button-form-show").addEventListener("click", () => {
+							document.getElementById("form-new").classList.remove("hidden")
+						})
+						document.body.addEventListener("module-inserted", () => {
+							document.getElementById("form-new").reset()
+							document.getElementById("form-new").classList.add("hidden")
+						})
+					})
+				</script>
+			`}
 		</Layout>
 	);
 });
 
 app.get('/assessors', async (c) => {
-	const stm = 'SELECT * FROM assessors';
+	const stm = 'SELECT * FROM assessors ORDER BY created DESC';
 	const rs = await c.env.DB.prepare(stm).all();
+
+	const idEr = `id${randomToken()}`
+
 	return c.html(
 		<Layout>
 			<div class="flex items-center gap-4 my-10">
 				<h1 class="flex-grow text-2xl font-semibold tracking-tight">Daftar Asesor</h1>
+				<button class="button bg-blue-600" id="button-form-show">New</button>
 			</div>
-			<TableAssessors data={rs.results} />
+			<form
+				class="assessor-editor py-5 mb-10 hidden"
+				hx-post={ `/assessors` }
+				hx-target={ `table` }
+				hx-swap="afterbegin"
+				id="form-new"
+			>
+				<div class="flex gap-5 input-container">
+					<div class="w-full">
+						<label for="fullname" class="block text-sm font-medium leading-6 text-gray-900">Fullname <span class="text-red-600">*</span></label>
+						<div class="mt-2">
+							<input class="w-full" type="text" name="fullname" id="fullname" required />
+						</div>
+					</div>
+					<div class="w-full">
+						<label for="username" class="block text-sm font-medium leading-6 text-gray-900">Username <span class="text-red-600">*</span></label>
+						<div class="mt-2">
+							<input class="w-full" type="text" name="username" id="username" required />
+						</div>
+					</div>
+				</div>
+				<div class="flex gap-5 input-container mt-2">
+					<div class="w-full">
+						<label for="email" class="block text-sm font-medium leading-6 text-gray-900">Email</label>
+						<div class="mt-2">
+							<input class="w-full" type="email" name="email" id="email" />
+						</div>
+					</div>
+					<div class="w-full">
+						<label for="password" class="block text-sm font-medium leading-6 text-gray-900">Password</label>
+						<div class="mt-2">
+							<input class="w-full" type="text" name="password" id="password" />
+						</div>
+					</div>
+				</div>
+				<div class="flex input-container mt-2 justify-center">
+					<span class="text-center text-red-600 font-semibold" id={ idEr }></span>
+				</div>
+				<div class="flex input-container gap-3 mt-5 justify-end">
+					<button type="button" class="button bg-transparent text-black active:bg-transparent" id="button-form-cancel">
+						Cancel
+					</button>
+					<button class="button">Submit</button>
+				</div>
+			</form>
+			<TableAssessors data={ rs.results } />
+			{ html`
+				<script>
+					document.addEventListener("DOMContentLoaded", () => {
+						document.getElementById("form-new").addEventListener("htmx:responseError", e => {
+							document.getElementById("${idEr}").innerText = e.detail.xhr.responseText
+						})
+						document.getElementById("button-form-cancel").addEventListener("click", () => {
+							document.getElementById("form-new").classList.add("hidden")
+							document.getElementById("form-new").reset()
+						})
+						document.getElementById("button-form-show").addEventListener("click", () => {
+							document.getElementById("form-new").classList.remove("hidden")
+						})
+						document.body.addEventListener("assessor-inserted", () => {
+							document.getElementById("form-new").reset()
+							document.getElementById("form-new").classList.add("hidden")
+						})
+					})
+				</script>
+			`}
 		</Layout>
 	);
 });
@@ -230,11 +379,11 @@ app.get('/orgs/:org_id', async (c) => {
 	return c.html(
 		<Layout>
 			<div class="flex items-center gap-4 mt-10 mb-10">
-				<h1 class="flex-grow text-2xl font-semibold tracking-tight">{org.name} </h1>
-				<PrevNext prev={prev} next={next} />
+				<h1 class="flex-grow text-2xl font-semibold tracking-tight">{ org.name } </h1>
+				<PrevNext prev={ prev } next={ next } />
 			</div>
-			<TableOrgBatches batches={batches} />
-			<FormNewBatch org_id={org.id} />
+			<TableOrgBatches batches={ batches } />
+			<FormNewBatch org_id={ org.id } />
 		</Layout>
 	);
 })
@@ -254,6 +403,18 @@ app.post('/orgs/:org_id', async (c) => {
 	await db.prepare(stm1).bind(id, token, org_id, date, type, title).run();
 	return c.redirect(`/batches/${id}`);
 })
+
+// htmx
+// =============================================================================================
+// =============================================================================================
+
+app.post("/assessors", POST_AssessorEditor)
+app.get("/assessors/:id_assessor", GET_AssessorEditor)
+app.put("/assessors/:id_assessor", PUT_AssessorEditor)
+
+app.post("/modules", POST_ModuleEditor)
+app.get("/modules/:id_module", GET_ModuleEditor)
+app.put("/modules/:id_module", PUT_ModuleEditor)
 
 app.route('/batches', batch);
 export default app;
