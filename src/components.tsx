@@ -280,7 +280,7 @@ export const BatchHero = (props: { batch: VBatch }) => {
 	);
 }
 
-export const BatchMenu = (props: { batch_id: number; path: string }) => {
+export const BatchMenu = (props: { batch_id: string; path: string }) => {
 	const { batch_id, path } = props;
 	const menu = [
 		{ path: '/settings', label: 'Settings' },
@@ -975,7 +975,7 @@ export const ReqsTable = (props: { alloc: SlotsAlloc }) => {
 	);
 };
 
-export const AssessorAllocation = (props: { batch_id: number; type: string; minmax: Minmax; title: string; assessors: VBatchAssessor[] }) => {
+export const AssessorAllocation = (props: { batch_id: string; type: string; minmax: Minmax; title: string; assessors: VBatchAssessor[] }) => {
 	const { batch_id, type, minmax, title, assessors } = props;
 	const parent_id = `${type}-assessors`;
 	const tray_id = `${type}-assessors-tray`;
@@ -1381,7 +1381,7 @@ export const AssessorRow = ({ num, assessor }: { num?: string, assessor: Assesso
 	const id = `id${randomToken()}`
 	return (
 		<tbody>
-			<tr 
+			<tr
 				class="border-b border-stone-300 hover:bg-gray-200"
 				hx-get={ `/assessors/${assessor.id}?form=true` }
 				hx-swap="innerHTML"
@@ -1469,7 +1469,7 @@ export const ModulesRow = ({ mod, num }: { mod: AcesModule, num?: number }) => {
 
 	return (
 		<tbody>
-			<tr 
+			<tr
 				class="border-b border-stone-300 hover:bg-gray-200"
 				hx-get={ `/modules/${mod.id}?form=true` }
 				hx-swap="innerHTML"

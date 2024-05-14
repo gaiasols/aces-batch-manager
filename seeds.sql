@@ -172,7 +172,7 @@ UPDATE slots SET disc_pos=2 WHERE slot2='DISC';
 UPDATE slots SET disc_pos=3 WHERE slot3='DISC';
 UPDATE slots SET disc_pos=4 WHERE slot4='DISC';
 -- batch_id starts 101, org starts 11
-INSERT INTO batches (id, token, org_id, type, date) VALUES
-	(101, '101921', 11, 'ASCENT', '2024-03-28'),
-	(102, '102280', 12, 'CUSTOM', '2024-04-18'),
-	(103, '103006', 13, 'ASCENT', '2024-05-03');
+INSERT INTO batches (id, org_id, type, date) VALUES
+	('101921', 11, 'ASCENT', '2024-03-28'),
+	('102280', 12, 'CUSTOM', '2024-04-18'),
+	('103006', 13, 'ASCENT', '2024-05-03');
