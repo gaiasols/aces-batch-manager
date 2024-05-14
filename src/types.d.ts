@@ -15,8 +15,8 @@ type Admin = {
 };
 
 type Batch = {
-	id: number;
-	token: string;
+	id: string;
+	// token: string;
 	org_id: number;
 	date: string;
 	type: string;
@@ -62,7 +62,7 @@ type VBatchModule = BatchModule & {
 };
 
 type BatchRuntimeInfo = {
-	batch_id: number;
+	batch_id: string;
 	modules: number;
 	tokens: string[];
 	slot_mode: string;
@@ -158,7 +158,7 @@ type VGroup = Group & {
 };
 
 type Grouping = {
-	batch_id: number;
+	batch_id: string;
 	group_id: string;
 	person_id: string;
 	face_ass_id: number | null;
@@ -175,7 +175,7 @@ type CustomSlot = {
 };
 
 type AssessorAllocation = {
-	batch_id: number;
+	batch_id: string;
 	disc_slot1: number;
 	disc_slot2: number;
 	disc_slot3: number;
@@ -201,8 +201,6 @@ type TParticipant = {
 
 type TParticipants = TParticipant[];
 
-
-
 // ===============================================================================
 // ===============================================================================
 type Assessor = {
@@ -211,24 +209,25 @@ type Assessor = {
 	fullname: string;
 	username: string;
 	email: string | null;
-}
+};
 
-type SlotsAlloc = { // SlotsAlloc
+type SlotsAlloc = {
+	// SlotsAlloc
 	batch_id: number;
 	permutation: number;
-	disc_slot1: number,
-	disc_slot2: number,
-	disc_slot3: number,
-	disc_slot4: number,
-	face_slot1: number,
-	face_slot2: number,
-	face_slot3: number,
-	face_slot4: number,
-	face_slot1_size: number | null,
-	face_slot2_size: number | null,
-	face_slot3_size: number | null,
-	face_slot4_size: number | null,
-}
+	disc_slot1: number;
+	disc_slot2: number;
+	disc_slot3: number;
+	disc_slot4: number;
+	face_slot1: number;
+	face_slot2: number;
+	face_slot3: number;
+	face_slot4: number;
+	face_slot1_size: number | null;
+	face_slot2_size: number | null;
+	face_slot3_size: number | null;
+	face_slot4_size: number | null;
+};
 
 type BatchAssessor = {
 	batch_id: number;
@@ -238,19 +237,19 @@ type BatchAssessor = {
 	slot2: number;
 	slot3: number;
 	slot4: number;
-}
+};
 
 type VBatchAssessor = BatchAssessor & {
 	fullname: string;
 	username: string;
 	email: string | null;
-}
+};
 
 type Minmax = {
 	mindisc: number;
 	maxdisc: number;
 	minface: number;
 	maxface: number;
-}
+};
 
-type GroupFacePosition = Record<string, 1 | 2 | 3 | 4>
+type GroupFacePosition = Record<string, 1 | 2 | 3 | 4>;

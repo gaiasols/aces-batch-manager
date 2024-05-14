@@ -72,6 +72,7 @@ app.get('/:batch_id/persons', async (c) => {
 	const stm0 = 'SELECT * FROM persons WHERE batch_id=?';
 	const rs = await c.env.DB.prepare(stm0).bind(batch_id).all();
 	const persons = rs.results as Person[];
+	console.log(persons[0])
 	return c.html(
 		<BatchLayout batch={batch} path="/persons">
 			<div id="daftar-peserta">
@@ -185,7 +186,7 @@ app.get('/:batch_id/assessors', async (c: Context<{ Bindings: Env }>) => {
 	const { minface, mindisc, maxface, maxdisc } = getAssessorReqs(alloc);
 	console.log(alloc)
 	const minmax: Minmax = { minface, mindisc, maxface, maxdisc }
-	
+
 	return c.html(
 		<Layout title={ `Batch #${batch.id} - Alokasi Asesor` } class="batch">
 			<BatchHero batch={ batch } />
@@ -267,7 +268,7 @@ app.get('/:batch_id/preps', async (c: Context<{ Bindings: Env }>) => {
 						{ batch.mod_disc && groupAssessorsToRender }
 						{ batch.mod_face && F2FAssessorsToRender }
 					</>
-				) : 
+				) :
 				<p>Batch ini tidak membutuhkan asesor.</p> */}
 			<script src="/static/js/preps.js"></script>
 		</Layout>

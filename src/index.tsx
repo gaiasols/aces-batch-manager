@@ -8,6 +8,7 @@ import { deleteCookie, setCookie } from "hono/cookie";
 import { decrypt } from "./crypto";
 import { html } from "hono/html";
 import { app as batch } from "./batch";
+import { app as service } from './service';
 import { GET_AssessorEditor, GET_ModuleEditor, POST_AssessorEditor, POST_ModuleEditor, PUT_AssessorEditor, PUT_ModuleEditor } from "./htmx";
 
 const app = new Hono<{ Bindings: Env }>();
@@ -193,7 +194,7 @@ app.get('/modules', async (c) => {
 	const stm = 'SELECT * FROM modules ORDER BY ascent DESC';
 	const rs = await c.env.DB.prepare(stm).all();
 	const modules = rs.results as AcesModule[];
-	
+
 	const idEr = `id${randomToken()}`
 
 
@@ -394,14 +395,19 @@ app.post('/orgs/:org_id', async (c) => {
 	const type = body.type as string;
 	const date = body.date as string;
 	const title = body.title as string;
-	const token = randomToken();
-	const stm0 = 'SELECT MAX(id) + 1 AS id FROM batches';
+	//
 	const db = c.env.DB;
-	const rs = (await db.prepare(stm0).first()) as { id: number };
-	const id = rs.id;
-	const stm1 = 'INSERT INTO batches (id,token,org_id,date,type,title) VALUES (?,?,?,?,?,?)';
-	await db.prepare(stm1).bind(id, token, org_id, date, type, title).run();
-	return c.redirect(`/batches/${id}`);
+	const rs0 = await db.prepare('SELECT id FROM batches').all();
+	const ids = rs0.results.map((x) => x.id);
+	let new_id = randomToken();
+	while (ids.includes(new_id)) { new_id = randomToken(); }
+	// const token = randomToken();
+	// const stm0 = 'SELECT MAX(id) + 1 AS id FROM batches';
+	// const rs = (await db.prepare(stm0).first()) as { id: number };
+	// const id = rs.id;
+	const stm1 = 'INSERT INTO batches (id,org_id,date,type,title) VALUES (?,?,?,?,?)';
+	await db.prepare(stm1).bind(new_id, org_id, date, type, title).run();
+	return c.redirect(`/batches/${new_id}`);
 })
 
 // htmx
@@ -417,4 +423,5 @@ app.get("/modules/:id_module", GET_ModuleEditor)
 app.put("/modules/:id_module", PUT_ModuleEditor)
 
 app.route('/batches', batch);
+app.route('/service', service);
 export default app;
