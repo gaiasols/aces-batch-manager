@@ -30,6 +30,7 @@ app.get('/batches/:batch_id', async (c) => {
 app.get('/token/:token', async (c) => {
 	const token = c.req.param('token');
 	const stm = 'SELECT * FROM v_batches WHERE id=?';
+	// const stm = 'SELECT * FROM v_batches WHERE token=?';
 	const batch = await c.env.DB.prepare(stm).bind(token).first();
 	if (batch) return c.json(batch);
 	return c.notFound();
