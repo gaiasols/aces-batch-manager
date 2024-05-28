@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { randomToken } from './utils';
+import { decrypt } from './crypto';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -42,6 +43,8 @@ app.post('/login', async (c) => {
 	const stm0 = 'SELECT * FROM v_persons WHERE batch_id=? AND username=?';
 	const found = await c.env.DB.prepare(stm0).bind(id, username).first();
 	if (!found) return c.notFound();
+	const decrypted = await decrypt(found.hash as string, c);
+	if(decrypted !== password) return c.notFound();
 
 	const stm1 = 'SELECT * FROM v_batch_modules WHERE batch_id=? ORDER BY priority';
 	const rs = await c.env.DB.prepare(stm1).bind(id).all();
