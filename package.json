@@ -5,7 +5,7 @@
 	"scripts": {
 		"deploy": "wrangler deploy",
 		"dev": "npx wrangler@latest dev",
-		"db:prod": "npx wrangler d1 execute DB --remote --file=./schema.sql",
+		"db:prod": "npx wrangler d1 execute DB --remote --file=./schema.sql && npx wrangler d1 execute DB --remote --file=./seeds.sql",
 		"db:local": "npx wrangler d1 execute DB --local --file=./schema.sql && npx wrangler d1 execute DB --local --file=./seeds.sql",
 		"dev:tw": "npx tailwindcss -i ./src/input.css -o ./assets/styles.css --watch",
 		"start": "wrangler dev",

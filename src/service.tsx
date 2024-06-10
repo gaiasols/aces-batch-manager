@@ -28,6 +28,13 @@ app.get('/batches/:batch_id', async (c) => {
 	return c.json({found , batch_modules});
 })
 
+app.get("/batches/:batch_id/person", async c => {
+	const id = c.req.param('batch_id');
+	const stm = 'SELECT id, fullname FROM v_persons WHERE batch_id=?';
+	const persons = await c.env.DB.prepare(stm).bind(id).all();
+	return c.json(persons.results);
+})
+
 app.get('/token/:token', async (c) => {
 	const token = c.req.param('token');
 	const stm = 'SELECT * FROM v_batches WHERE id=?';
