@@ -58,7 +58,7 @@ INSERT INTO organizations (id, name) VALUES
 	(13, 'PT Guthe Harmoni Indonesia');
 
 INSERT INTO modules (id, category, title, ascent) VALUES
-	('SELF:GPQ-01', 'SELF', 'GPQ', 1),
+	('SELF:GPQ-202303', 'SELF', 'GPQ', 1),
 	('SELF:GMATE-01', 'SELF', 'G-MATE', 0),
 	('SELF:CRATE-01', 'SELF', 'C-RATE', 0),
 	('SELF:CSI-01', 'SELF', 'CSI', 0),
@@ -77,8 +77,8 @@ INSERT INTO modules (id, category, title, ascent) VALUES
 	('DISC:LGD-01', 'DISC', 'LGD: General', 1),
 	('DISC:LGD-02', 'DISC', 'LGD: Teamwork', 1),
 	('DISC:LGD-03', 'DISC', 'LGD: Evaluation', 1),
-	('SELF:GPQGMATE-01', 'SELF', 'GPQ & G-MATE', 1),
-	('SELF:GPQCRATE-01', 'SELF', 'GPQ & C-RATE', 1);
+	('SELF:GMATEGPQ-01|202303', 'SELF', 'G-MATE & GPQ', 1),
+	('SELF:GPQCRATE-202303|01', 'SELF', 'GPQ & C-RATE', 1);
 
 INSERT INTO slots (id, modules, mode) VALUES (10, 1, 'SEED-SLOT');
 -- actual slots
