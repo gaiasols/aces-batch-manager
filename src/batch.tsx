@@ -1,5 +1,5 @@
 import { Context, Hono } from "hono";
-import { AssessorAllocation, BatchHero, BatchLayout, BatchMenu, BatchNeedsRegrouping, BatchRequirements, DaftarPeserta, FormSettingsModules, PairingF2FAssessorWithParticipant, PairingGroupAssessorWithParticipant, Pojo, Regroup, SettingsDateTitle, SettingsInfo, SettingsModules, TableGroupSlots, TableGroups, UploadPersonsCSV } from "./components";
+import { AssessorAllocation, BatchHero, BatchLayout, BatchMenu, BatchNeedsRegrouping, BatchRequirements, DaftarPeserta, FormBatchTimeSettings, FormSettingsModules, LockSVG, PairingF2FAssessorWithParticipant, PairingGroupAssessorWithParticipant, Pojo, Regroup, SettingsDateTitle, SettingsInfo, SettingsModules, TableGroupSlots, TableGroups, UploadPersonsCSV } from "./components";
 import { createParticipants, getAssessorReqs, getBatch, getBatchRuntimeInfo, getSlotPosition, regroupAscentBatch, regroupCustomBatch } from "./utils";
 import { DELETE_PersonEditor, Delete_AssessorListAllocation, GET_AssesorListAllocation, GET_DateTitle, GET_FormDateTitle, GET_FormModules, GET_IndividualSlotAssessorAllocation, GET_Modules, GET_PersonEditor, POST_AssessorListAllocation, POST_DateTitle, POST_Modules, PUT_DISCAssessorParticipantPairing, PUT_FACEAssessorParticipantPairing, PUT_IndividualSlotAssessorAllocation, PUT_PersonEditor } from "./htmx";
 import { Layout } from "./layout";
@@ -25,13 +25,13 @@ app.get('/:batch_id', async (c) => {
 	const prev = batch.prev_id ? `/batches/${batch.prev_id}` : '';
 	const next = batch.next_id ? `/batches/${batch.next_id}` : '';
 	return c.html(
-		<BatchLayout batch={batch} path="/settings">
-			<SettingsInfo batch={batch} />
-			<SettingsDateTitle batch={batch} />
-			<>{info.tokens.length > 0 && <SettingsModules batch={batch} info={info} />}</>
-			<>{info.tokens.length == 0 && <FormSettingsModules batch={batch} modules={modules} info={info} />}</>
+		<BatchLayout batch={ batch } path="/settings">
+			<SettingsInfo batch={ batch } />
+			<SettingsDateTitle batch={ batch } />
+			<>{ info.tokens.length > 0 && <SettingsModules batch={ batch } info={ info } /> }</>
+			<>{ info.tokens.length == 0 && <FormSettingsModules batch={ batch } modules={ modules } info={ info } /> }</>
 			<div></div>
-			<Pojo obj={info} />
+			<Pojo obj={ info } />
 		</BatchLayout>
 	);
 });
@@ -74,10 +74,10 @@ app.get('/:batch_id/persons', async (c) => {
 	const persons = rs.results as Person[];
 	console.log(persons[0])
 	return c.html(
-		<BatchLayout batch={batch} path="/persons">
+		<BatchLayout batch={ batch } path="/persons">
 			<div id="daftar-peserta">
-				{persons.length > 0 && <DaftarPeserta persons={persons} />}
-				{persons.length == 0 && <UploadPersonsCSV batch={batch} />}
+				{ persons.length > 0 && <DaftarPeserta persons={ persons } /> }
+				{ persons.length == 0 && <UploadPersonsCSV batch={ batch } /> }
 			</div>
 		</BatchLayout>
 	);
@@ -90,7 +90,7 @@ app.get('/:batch_id/grouping', async (c) => {
 
 	// Batch needs regrouping
 	if (batch.regrouping > 0) return c.html(
-		<BatchNeedsRegrouping batch={batch} path="/grouping" />
+		<BatchNeedsRegrouping batch={ batch } path="/grouping" />
 	);
 
 	const stm0 = 'SELECT * FROM v_batch_modules WHERE batch_id=?';
@@ -108,7 +108,7 @@ app.get('/:batch_id/grouping', async (c) => {
 
 	// Not ready for grouping
 	if (modules.length == 0 || persons.length == 0) return c.html(
-		<BatchLayout batch={batch} path="/grouping">
+		<BatchLayout batch={ batch } path="/grouping">
 			<p class="">Belum ada data peserta dan/atau data modul.</p>
 		</BatchLayout>
 	);
@@ -116,10 +116,10 @@ app.get('/:batch_id/grouping', async (c) => {
 
 	const info = getBatchRuntimeInfo(modules, batch.id, batch.type, batch.split);
 	return c.html(
-		<BatchLayout batch={batch} path="/grouping">
-			<TableGroupSlots groups={groups} modules={modules} type={batch.type} />
-			<TableGroups groups={groups} persons={persons} />
-			<Pojo obj={info} />
+		<BatchLayout batch={ batch } path="/grouping">
+			<TableGroupSlots groups={ groups } modules={ modules } type={ batch.type } />
+			<TableGroups groups={ groups } persons={ persons } />
+			<Pojo obj={ info } />
 		</BatchLayout>
 	);
 });
@@ -127,13 +127,68 @@ app.get('/:batch_id/grouping', async (c) => {
 app.get('/:batch_id/deployment', async (c) => {
 	const batch_id = c.req.param('batch_id');
 	const batch = await getBatch(c.env.DB, batch_id);
+
 	if (!batch) return c.notFound();
+	if (batch.regrouping > 0) return c.html(<Regroup batch={ batch } path="/assessors" />);
+	
+	const groups = await c.env.DB.prepare('SELECT * FROM v_groups WHERE batch_id=? limit 1').bind(batch_id).first() as VGroup;
+	const slots = Object.entries(groups).filter(([k, v]) => k.startsWith('slot') && (v !== 'null')).map(([k]) => k.replace('slot', 'slot_') as ('slot_1' | 'slot_2' | 'slot_3' | 'slot_4'));
+
 	return c.html(
-		<BatchLayout batch={batch} path="/deployment">
-			<p>Page: Deployment</p>
+		<BatchLayout batch={ batch } js={ ["/deployment.js"] } path="/deployment">
+			<div class="rounded border border-stone-300 px-4 pr-2 pt-2 pb-3 my-5">
+				<div class="relative card-time-settings">
+					<div class="absolute top-0 right-0">
+						<button
+							class="flex items-center justify-center w-5 h-5 text-stone-300 hover:text-stone-500 active:text-stone-700 button-trigger-show"
+						>
+							<LockSVG />
+						</button>
+					</div>
+					<FormBatchTimeSettings batch={ batch } type="batch" />
+				</div>
+			</div>
+			{ slots.map(v => (
+				<div class="rounded border border-stone-300 px-4 pr-2 pt-2 pb-3 my-5">
+					<div class="relative card-time-settings">
+						<div class="absolute top-0 right-0">
+							<button
+								class="flex items-center justify-center w-5 h-5 text-stone-300 hover:text-stone-500 active:text-stone-700 button-trigger-show"
+							>
+								<LockSVG />
+							</button>
+						</div>
+						<FormBatchTimeSettings batch={ batch } type={v} />
+					</div>
+				</div>
+			)) }
 		</BatchLayout>
 	);
 });
+
+app.put("/:batch_id/deployment", async (c) => {
+	const body = (await c.req.parseBody()) as unknown as TDeploymentRequestContract;
+	const batch_id = c.req.param('batch_id');
+
+	const toSave = {} as any;
+	if(body.type === "batch") {
+		const dateStart = new Date(`${body.date_start} ${body.time_start}`);
+		const dateEnd = new Date(`${body.date_end} ${body.time_end}`);
+		toSave.batch_timestamp_start = dateStart.getTime();
+		toSave.batch_timestamp_end = dateEnd.getTime();
+	}
+	if(body.type.includes("slot")) {
+		const level = body.type.split("_")[1];
+		toSave[`time${level}`] = `${body.date_start} ${body.time_start}`;
+		toSave[`time${level}_end`] = `${body.date_end} ${body.time_end}`;
+	}
+	await c.env.DB.prepare(`UPDATE batches SET ${Object.keys(toSave).map(k => `${k}=?`).join(", ")} WHERE id=?`)
+		.bind(...Object.values(toSave), batch_id).run();
+	const batch = await getBatch(c.env.DB, batch_id);
+	if (!batch) return c.notFound();
+
+	return c.html(<FormBatchTimeSettings batch={ batch } type={ body.type } />)
+})
 
 app.post('/:batch_id/regroup', async (c) => {
 	const ref = new URL(c.req.header('referer') as string).pathname;

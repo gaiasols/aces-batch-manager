@@ -1,6 +1,8 @@
 import { html } from "hono/html";
 import { Layout } from "./layout";
 import { getAssessorReqs, randomToken } from "./utils";
+import { orgsTypeArray } from "./orgs-type";
+import { businessSectorArray } from "./business-sector";
 
 export const Pojo = (props: { obj: any }) => (
 	<pre class="max-h-64 bg-yellow-200/30 text-[12px] text-red-500 leading-4 overflow-x-auto my-5">{ JSON.stringify(props.obj, null, 2) }</pre>
@@ -91,7 +93,9 @@ export const TableOrgs = (props: { orgs: any[] }) => (
 						<td class="pr-2 py-3">
 							<a href={ `/orgs/${o.id}` }>{ o.name }</a>
 						</td>
-						<td class="pr-2 py-3">xxx</td>
+						<td class="pr-2 py-3">
+							<a href={`orgs/${o.id}/update-orgs`} class="bg-zinc-800 text-white text-xs px-4 py-1 rounded">Update</a>
+						</td>
 						<td class="py-3 ">xxxxx</td>
 					</tr>
 				)) }
@@ -127,7 +131,7 @@ export const TableModules = (props: { modules: AcesModule[] }) => (
 	<div>
 		<table class="w-full border-t border-stone-400">
 			{ props.modules.map((m: any, i: number) => (
-				<ModulesRow mod={m} num={i + 1} />
+				<ModulesRow mod={ m } num={ i + 1 } />
 			)) }
 		</table>
 	</div>
@@ -312,8 +316,8 @@ export const BatchMenu = (props: { batch_id: string; path: string }) => {
 	);
 };
 
-export const BatchLayout = (props: { css?: string[], batch: VBatch; path: string; children?: any }) => (
-	<Layout css={ props.css }>
+export const BatchLayout = (props: { css?: string[], js?: string[], batch: VBatch; path: string; children?: any }) => (
+	<Layout css={ props.css } js={ props.js }>
 		<BatchHero batch={ props.batch } />
 		<BatchMenu batch_id={ props.batch.id } path={ props.path } />
 		{ props.children }
@@ -406,7 +410,7 @@ export const SettingsDateTitle = (props: { batch: VBatch }) => (
 						<tr>
 							<td></td>
 							<td class="pt-3">
-								<button class="button">SUBWAY</button>
+								<button class="button">SUBMIT</button>
 							</td>
 						</tr>
 					</tbody>
@@ -682,17 +686,6 @@ export const UploadPersonsCSV = (props: { batch: Batch | VBatch }) => (
 				Download file template daftar peserta
 			</a>
 		</p>
-		{/* DEV ONLY */ }
-		{/* <p class="border-b border-stone-400 text-stone-400 text-center font-mono mt-8">DEV ONLY</p>
-		<form method="post" class="flex items-center justify-center mt-6">
-			<input type="hidden" name="batch_id" value={props.batch.id} />
-			<input type="hidden" name="org_id" value={props.batch.org_id} />
-			<div class="flex gap-3 items-center">
-				<span>Create sample data:</span>
-				<input type="number" name="num" min={5} max={100} value={15} class="w-20 input" />
-				<button class="button">Create</button>
-			</div>
-		</form> */}
 		{ html`
 			<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
 			<script>
@@ -714,7 +707,7 @@ export const UploadPersonsCSV = (props: { batch: Batch | VBatch }) => (
 							fr.onload = (e) => {
 								try {
 									const t = e.target.result;
-									const x = window?.Papa.parse(t)?.data ?? [];
+									const x = (window?.Papa.parse(t)?.data ?? []).filter(y => y.length === 3);
 									x.shift();
 									if (!x.length) return;
 
@@ -1383,21 +1376,20 @@ export const AssessorRow = ({ num, assessor }: { num?: string, assessor: Assesso
 		<tbody>
 			<tr
 				class="border-b border-stone-300 hover:bg-gray-200"
-				hx-get={ `/assessors/${assessor.id}?form=true` }
+				hx-get={ `/assessors/${assessor.id}?form=true&num=${num}` }
 				hx-swap="innerHTML"
 				hx-target={ `#${id}` }
 			>
 				<td class="pr-2 py-3">{ num ?? "#" }</td>
 				<td class="py-3 ">{ assessor.fullname }</td>
 				<td class="pr-2 py-3">{ assessor.username }</td>
-				<td class="text-sm text-right font-mono pr-2 py-3">{ assessor.hash }</td>
 			</tr>
-			<tr id={id}></tr>
+			<tr id={ id }></tr>
 		</tbody>
 	)
 }
 
-export function AssessorEditor({ assessor }: { assessor: Assessor }) {
+export function AssessorEditor({ assessor, num }: { num?: string, assessor: Assessor }) {
 	const id = `id${randomToken()}`
 	const idEr = `id${randomToken()}`
 
@@ -1409,6 +1401,7 @@ export function AssessorEditor({ assessor }: { assessor: Assessor }) {
 				hx-target={ `closest tbody` }
 				hx-swap="outerHTML"
 			>
+				<input type="hidden" name="num" value={num} />
 				<div class="flex gap-5 input-container">
 					<div class="w-full">
 						<label for="fullname" class="block text-sm font-medium leading-6 text-gray-900">Fullname <span class="text-red-600">*</span></label>
@@ -1437,6 +1430,84 @@ export function AssessorEditor({ assessor }: { assessor: Assessor }) {
 						</div>
 					</div>
 				</div>
+
+				<hr class="border-bottom border-black mt-8 mb-5" />
+				
+				<div class="flex gap-5 input-container mt-2">
+					<div class="w-full">
+						<label for="ranking" class="block text-sm font-medium leading-6 text-gray-900">Ranking</label>
+						<div class="mt-2">
+							<input class="w-full" type="number" name="ranking" id="ranking" value={ assessor.ranking ?? "" } />
+						</div>
+					</div>
+					<div class="w-full">
+						<label for="university" class="block text-sm font-medium leading-6 text-gray-900">University</label>
+						<div class="mt-2">
+							<input class="w-full" type="text" name="university" id="university" value={ assessor.university ?? "" } />
+						</div>
+					</div>
+				</div>
+
+				<div class="flex gap-5 input-container mt-2">
+					<div class="w-full">
+						<label for="date_of_birth" class="block text-sm font-medium leading-6 text-gray-900">Date of Birth</label>
+						<div class="mt-2">
+							<input class="w-full" type="date" name="date_of_birth" id="date_of_birth" value={ assessor.date_of_birth ?? "" } />
+						</div>
+					</div>
+					<div class="w-full">
+						<label for="graduation_year" class="block text-sm font-medium leading-6 text-gray-900">Graduation Year</label>
+						<div class="mt-2">
+							<input class="w-full" type="number" name="graduation_year" id="graduation_year" value={ assessor.graduation_year ?? "" } />
+						</div>
+					</div>
+				</div>
+
+				<div class="flex gap-5 input-container mt-2">
+					<div class="w-full">
+						<label for="phone_number" class="block text-sm font-medium leading-6 text-gray-900">Phone Number</label>
+						<div class="mt-2">
+							<input class="w-full" type="tel" name="phone_number" id="phone_number" value={ assessor.phone_number ?? "" } />
+						</div>
+					</div>
+					<div class="w-full">
+						<label for="home_address" class="block text-sm font-medium leading-6 text-gray-900">Home Address</label>
+						<div class="mt-2">
+							<input class="w-full" type="text" name="home_address" id="home_address" value={ assessor.home_address ?? "" } />
+						</div>
+					</div>
+				</div>
+
+				<div class="flex gap-5 input-container mt-2">
+					<div class="w-full">
+						<label for="email" class="block text-sm font-medium leading-6 text-gray-900">Email</label>
+						<div class="mt-2">
+							<input class="w-full" type="email" name="email" id="email" value={ assessor.email ?? "" } />
+						</div>
+					</div>
+					<div class="w-full">
+						<label for="ktp_number" class="block text-sm font-medium leading-6 text-gray-900">KTP Number</label>
+						<div class="mt-2">
+							<input class="w-full" type="text" name="ktp_number" id="ktp_number" value={ assessor.ktp_number ?? "" } />
+						</div>
+					</div>
+				</div>
+
+				<div class="flex gap-5 input-container mt-2">
+					<div class="w-full">
+						<label for="npwp_number" class="block text-sm font-medium leading-6 text-gray-900">NPWP Number</label>
+						<div class="mt-2">
+							<input class="w-full" type="text" name="npwp_number" id="npwp_number" value={ assessor.npwp_number ?? "" } />
+						</div>
+					</div>
+					<div class="w-full">
+						<label for="npwp_name" class="block text-sm font-medium leading-6 text-gray-900">NPWP Name</label>
+						<div class="mt-2">
+							<input class="w-full" type="text" name="npwp_name" id="npwp_name" value={ assessor.npwp_name ?? "" } />
+						</div>
+					</div>
+				</div>
+
 				<div class="flex input-container mt-2 justify-center">
 					<span class="text-center text-red-600 font-semibold" id={ idEr }></span>
 				</div>
@@ -1481,7 +1552,7 @@ export const ModulesRow = ({ mod, num }: { mod: AcesModule, num?: number }) => {
 				<td class="pr-2 py-3">{ mod.category }</td>
 				<td class="pr-2 py-3">{ mod.ascent ? '✅' : '-' }</td>
 			</tr>
-			<tr id={id}></tr>
+			<tr id={ id }></tr>
 		</tbody>
 	)
 }
@@ -1512,10 +1583,10 @@ export function ModuleEditor({ mod }: { mod: AcesModule }) {
 						<label for="category" class="block text-sm font-medium leading-6 text-gray-900">Category <span class="text-red-600">*</span></label>
 						<div class="mt-2">
 							<select name="category" id="category" class="w-full">
-								<option value="SELF" selected={mod.category === "SELF"}>SELF</option>
-								<option value="CASE" selected={mod.category === "CASE"}>CASE</option>
-								<option value="FACE" selected={mod.category === "FACE"}>FACE</option>
-								<option value="DISC" selected={mod.category === "DISC"}>DISC</option>
+								<option value="SELF" selected={ mod.category === "SELF" }>SELF</option>
+								<option value="CASE" selected={ mod.category === "CASE" }>CASE</option>
+								<option value="FACE" selected={ mod.category === "FACE" }>FACE</option>
+								<option value="DISC" selected={ mod.category === "DISC" }>DISC</option>
 							</select>
 						</div>
 					</div>
@@ -1524,7 +1595,7 @@ export function ModuleEditor({ mod }: { mod: AcesModule }) {
 					<div class="w-full">
 						<label for="type" class="block text-sm font-medium leading-6 text-gray-900">Type <span class="text-red-600">*</span></label>
 						<div class="mt-2">
-							<input class="w-full" type="text" name="type" id="type" value={type} required placeholder="GPQ-01" />
+							<input class="w-full" type="text" name="type" id="type" value={ type } required placeholder="GPQ-01" />
 						</div>
 					</div>
 					<div class="w-full">
@@ -1537,7 +1608,7 @@ export function ModuleEditor({ mod }: { mod: AcesModule }) {
 				<div class="flex gap-5 input-container mt-5">
 					<div class="w-full flex items-center">
 						<div>
-							<input type="checkbox" name="ascent" id="ascent" checked={Boolean(mod.ascent)} />
+							<input type="checkbox" name="ascent" id="ascent" checked={ Boolean(mod.ascent) } />
 						</div>
 						<label for="ascent" class="block ml-2 -mt-[2px] text-sm font-medium leading-6 text-gray-900">Assessment Center</label>
 					</div>
@@ -1567,4 +1638,351 @@ export function ModuleEditor({ mod }: { mod: AcesModule }) {
 			`}
 		</td>
 	)
+}
+
+export const FormBatchTimeSettings = ({ batch, type }: { type: "batch" | "slot_1" | "slot_2" | "slot_3" | "slot_4", batch: VBatch }) => {
+	const datetime: Record<string, Date | undefined | string> = {
+		date_start: undefined,
+		date_end: undefined,
+		time_start: undefined,
+		time_end: undefined,
+	}
+	
+	if(type === "batch") {
+		datetime.date_start = batch.batch_timestamp_start ? new Date(batch.batch_timestamp_start) : undefined
+		datetime.date_end = batch.batch_timestamp_end ? new Date(batch.batch_timestamp_end) : undefined
+	}
+
+	if(type.includes("slot")) {
+		const level = type.split("_")[1]
+		datetime.date_start = batch[`time${level}` as keyof VBatch] ? new Date(batch[`time${level}` as keyof VBatch] as string) : undefined
+		datetime.date_end = batch[`time${level}_end` as keyof VBatch] ? new Date(batch[`time${level}_end` as keyof VBatch] as string) : undefined
+	}
+	
+	datetime.time_start = datetime.date_start 
+		? `${(datetime.date_start as Date).getHours().toString().padStart(2, '0')}:${(datetime.date_start as Date).getMinutes().toString().padStart(2, '0')}` 
+		: undefined
+	datetime.time_end = datetime.date_end 
+		? `${(datetime.date_end as Date).getHours().toString().padStart(2, '0')}:${(datetime.date_end as Date).getMinutes().toString().padStart(2, '0')}` 
+		: undefined
+
+	return (
+		<form class="text-[15px] pr-6 mb-0" hx-put={`/batches/${batch.id}/deployment`} hx-swap="outerHTML">
+			<input type="hidden" name="type" value={type} />
+			<table class="w-full">
+				<tbody>
+					<tr>
+						<td width="30%" class="font-semibold text-nowrap pt-2 pr-2 pb-5">
+							Pengaturan { type === "batch" ? "Batch" : `Time ${type.split("_")[1]}` }
+						</td>
+					</tr>
+					<tr>
+						<td width="30%" class="text-nowrap pt-2 pr-2">
+							Tanggal mulai batch
+						</td>
+						<td class="pt-2 flex gap-3">
+							<input disabled required type="date" name="date_start" class="input" min={ new Date().toISOString().split('T')[0] } value={ datetime.date_start ? (datetime.date_start as Date).toISOString().split("T")[0] : undefined } />
+							<input disabled required type="time" name="time_start" class="input" min="06:00" max="19:00" value={ datetime.time_start } />
+						</td>
+					</tr>
+					<tr>
+						<td width="30%" class="text-nowrap pt-2 pr-2">
+							Tanggal berakhir batch
+						</td>
+						<td class="pt-2 flex gap-3">
+							<input disabled required type="date" name="date_end" class="input" min={ new Date().toISOString().split('T')[0] } value={ datetime.date_end ? (datetime.date_end as Date).toISOString().split("T")[0] : undefined } />
+							<input disabled required type="time" name="time_end" class="input" min="06:00" max="19:00" value={ datetime.time_end } />
+						</td>
+					</tr>
+				</tbody>
+				<tbody class="button-container hidden">
+					<tr>
+						<td colspan={ 2 } class="border-b border-stone-300 pt-4"></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td class="pt-3">
+							<div class="flex justify-between w-full">
+								<button type="submit" class="button">SUBMIT</button>
+								<button type="button" class="bg-transparent text-black active:bg-transparent border border-black px-5 font-semibold button-trigger-hide">CANCEL</button>
+							</div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</form>
+	)
+}
+
+export const NavTabsFormOrg = ({ type, orgId }: { orgId: string, type: TFormOrgType }) => {
+	return (
+		<nav class="flex flex-col sm:flex-row">
+			<button 
+				hx-get={ `/orgs/${orgId}/form?type=general` }
+				hx-swap="innerHTML"
+				hx-target="#update-org-content"
+				class={`text-gray-600 py-4 px-6 block hover:text-blue-500 focus:outline-none border-b-2 hover:border-blue-500 sm:w-auto focus:border-blue-500 ${type === "general" ? "border-blue-500" : " border-transparent"}`}
+			>
+				General
+			</button>
+
+			<button 
+				hx-get={ `/orgs/${orgId}/form?type=business` }
+				hx-swap="innerHTML"
+				hx-target="#update-org-content"
+				class={`text-gray-600 py-4 px-6 block hover:text-blue-500 focus:outline-none border-b-2 hover:border-blue-500 sm:w-auto focus:border-blue-500 ${type === "business" ? "border-blue-500" : " border-transparent"}`}
+			>
+				Usaha
+			</button>
+
+			<button 
+				hx-get={ `/orgs/${orgId}/form?type=npwp` }
+				hx-swap="innerHTML"
+				hx-target="#update-org-content"
+				class={`text-gray-600 py-4 px-6 block hover:text-blue-500 focus:outline-none border-b-2 hover:border-blue-500 sm:w-auto focus:border-blue-500 ${type === "npwp" ? "border-blue-500" : " border-transparent"}`}
+			>
+				NPWP
+			</button>
+
+			<button 
+				hx-get={ `/orgs/${orgId}/form?type=contact` }
+				hx-swap="innerHTML"
+				hx-target="#update-org-content"
+				class={`text-gray-600 py-4 px-6 block hover:text-blue-500 focus:outline-none border-b-2 hover:border-blue-500 sm:w-auto focus:border-blue-500 ${type === "contact" ? "border-blue-500" : " border-transparent"}`}
+			>
+				Contact
+			</button>
+		</nav>
+	)
+}
+
+export const FormOrgGeneral = ({ orgs }: { orgs: Organization }) => {
+	return (
+		<div class="form-update-container border border-gray-600 rounded relative p-8 mt-12">
+			<div class="absolute top-[10px] right-[10px]">
+				<button
+					class="flex items-center justify-center w-5 h-5 text-stone-300 hover:text-stone-500 active:text-stone-700 button-trigger-show"
+					hx-swap="outerHTML"
+				>
+					<LockSVG />
+				</button>
+			</div>
+			<form hx-put={`/orgs/${orgs.id}/update-orgs/general`} hx-target="#update-org-content" hx-swap="innerHTML" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-0">
+				<div>
+					<label for="nama" class="block text-gray-700">Nama</label>
+					<input disabled value={orgs.name} type="text" id="nama" name="name" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div>
+					<label for="alamat" class="block text-gray-700">Alamat</label>
+					<input disabled value={orgs?.address ?? ""} type="text" id="alamat" name="address" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div>
+					<label for="kota" class="block text-gray-700">Kota</label>
+					<input disabled value={orgs?.city ?? ""} type="text" id="kota" name="city" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div>
+					<label for="provinsi" class="block text-gray-700">Provinsi</label>
+					<input disabled value={orgs?.province ?? ""} type="text" id="provinsi" name="province" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div>
+					<label for="kode-pos" class="block text-gray-700">Kode Pos</label>
+					<input disabled value={orgs?.postal_code ?? ""} type="text" id="kode-pos" name="postal_code" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div>
+					<label for="telepon" class="block text-gray-700">Telepon</label>
+					<input disabled value={orgs?.phone ?? ""} type="text" id="telepon" name="phone" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div>
+					<label for="email" class="block text-gray-700">Email</label>
+					<input disabled value={orgs?.email ?? ""} type="email" id="email" name="email" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div>
+					<label for="website" class="block text-gray-700">Website</label>
+					<input disabled value={orgs?.website ?? ""} type="url" id="website" name="website" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div class="md:col-span-2 hidden button-container flex gap-4 mt-5">
+					<button type="button" class="w-full bg-zinc-800 text-white py-2 px-4 rounded hover:bg-zinc-900 button-trigger-hide">
+						Cancel
+					</button>
+					<button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+						Submit
+					</button>
+				</div>
+			</form>
+		</div>
+	)
+}
+
+export const FormOrgNpwp = ({ orgs }: { orgs: Organization }) => {
+	return (
+		<div class="form-update-container border border-gray-600 rounded relative p-8 mt-12">
+			<div class="absolute top-[10px] right-[10px]">
+				<button
+					class="flex items-center justify-center w-5 h-5 text-stone-300 hover:text-stone-500 active:text-stone-700 button-trigger-show"
+					hx-swap="outerHTML"
+				>
+					<LockSVG />
+				</button>
+			</div>
+			<form hx-put={`/orgs/${orgs.id}/update-orgs/npwp`} hx-target="#update-org-content" hx-swap="innerHTML" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-0">
+				<div>
+					<label for="nomor-npwp" class="block text-gray-700">Nomor NPWP</label>
+					<input value={orgs?.npwp_number ?? ""} disabled type="text" id="nomor-npwp" name="npwp_number" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div>
+					<label for="nama-npwp" class="block text-gray-700">Nama NPWP</label>
+					<input value={orgs?.npwp_name ?? ""} disabled type="text" id="nama-npwp" name="npwp_name" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div>
+					<label for="nik-dalam-npwp" class="block text-gray-700">NIK Dalam NPWP</label>
+					<input value={orgs?.npwp_nik ?? ""} disabled type="text" id="nik-dalam-npwp" name="npwp_nik" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div>
+					<label for="alamat-dalam-npwp" class="block text-gray-700">Alamat Dalam NPWP</label>
+					<input value={orgs?.npwp_address ?? ""} disabled type="text" id="alamat-dalam-npwp" name="npwp_address" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div>
+					<label for="kelurahan-dalam-npwp" class="block text-gray-700">Kelurahan Dalam NPWP</label>
+					<input value={orgs?.npwp_village ?? ""} disabled type="text" id="kelurahan-dalam-npwp" name="npwp_village" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div>
+					<label for="kecamatan-dalam-npwp" class="block text-gray-700">Kecamatan Dalam NPWP</label>
+					<input value={orgs?.npwp_district ?? ""} disabled type="text" id="kecamatan-dalam-npwp" name="npwp_district" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div>
+					<label for="kota" class="block text-gray-700">Kota</label>
+					<input value={orgs?.npwp_city ?? ""} disabled type="text" id="kota" name="npwp_city" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div>
+					<label for="provinsi" class="block text-gray-700">Provinsi</label>
+					<input value={orgs?.npwp_province ?? ""} disabled type="text" id="provinsi" name="npwp_province" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div class="md:col-span-2 hidden button-container flex gap-4 mt-5">
+					<button type="button" class="w-full bg-zinc-800 text-white py-2 px-4 rounded hover:bg-zinc-900 button-trigger-hide">
+						Cancel
+					</button>
+					<button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+						Submit
+					</button>
+				</div>
+			</form>
+		</div>
+	)
+}
+
+export const FormOrgContact = ({ orgs }: { orgs: Organization }) => {
+	return (
+		<div class="form-update-container border border-gray-600 rounded relative p-8 mt-12">
+			<div class="absolute top-[10px] right-[10px]">
+				<button
+					class="flex items-center justify-center w-5 h-5 text-stone-300 hover:text-stone-500 active:text-stone-700 button-trigger-show"
+					hx-swap="outerHTML"
+				>
+					<LockSVG />
+				</button>
+			</div>
+			<form hx-put={`/orgs/${orgs.id}/update-orgs/contact`} hx-target="#update-org-content" hx-swap="innerHTML" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+				<div>
+					<label for="nama" class="block text-gray-700">Nama</label>
+					<input value={orgs?.contact_name ?? ""} disabled type="text" id="nama" name="contact_name" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div>
+					<label for="nomor-hp" class="block text-gray-700">Nomor HP</label>
+					<input value={orgs?.contact_phone ?? ""} disabled type="text" id="nomor-hp" name="contact_phone" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div class="md:col-span-2">
+					<label for="email" class="block text-gray-700">Email</label>
+					<input value={orgs?.contact_email ?? ""} disabled type="email" id="email" name="contact_email" class="mt-1 block w-full p-2 border border-gray-300 rounded"  disabled:text-gray-800/>
+				</div>
+				<div class="md:col-span-2 hidden button-container flex gap-4 mt-5">
+					<button type="button" class="w-full bg-zinc-800 text-white py-2 px-4 rounded hover:bg-zinc-900 button-trigger-hide">
+						Cancel
+					</button>
+					<button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+						Submit
+					</button>
+				</div>
+			</form>
+		</div>
+	)
+}
+
+export const FormOrgBusiness = ({ orgs }: { orgs: Organization }) => {
+	return (
+		<div class="form-update-container border border-gray-600 rounded relative p-8 mt-12">
+			<div class="absolute top-[10px] right-[10px]">
+				<button
+					class="flex items-center justify-center w-5 h-5 text-stone-300 hover:text-stone-500 active:text-stone-700 button-trigger-show"
+					hx-swap="outerHTML"
+				>
+					<LockSVG />
+				</button>
+			</div>
+			<form hx-put={`/orgs/${orgs.id}/update-orgs/business`} hx-target="#update-org-content" hx-swap="innerHTML" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+				<div>
+					<label for="tipe-organisasi" class="block text-gray-700">Tipe Organisasi</label>
+					<select disabled id="tipe-organisasi" name="organization_type" class="mt-1 block w-full p-2 border border-gray-300 rounded disabled:text-gray-800">
+						{ orgsTypeArray().map(v => (
+							<option selected={(orgs?.organization_type ?? "") == v.id} value={ v.id }>{ v.name }</option>
+						)) }
+					</select>
+				</div>
+				<div>
+					<label for="kelompok-usaha" class="block text-gray-700">Kelompok Usaha</label>
+					<select disabled id="kelompok-usaha" name="business_sector" class="mt-1 block w-full p-2 border border-gray-300 rounded disabled:text-gray-800">
+						{ businessSectorArray().map(v => (
+							<option selected={(orgs?.business_sector ?? "") == v.id} value={ v.id }>{ v.name }</option>
+						)) }
+					</select>
+				</div>
+				<div class="md:col-span-2 hidden button-container flex gap-4 mt-5">
+					<button type="button" class="w-full bg-zinc-800 text-white py-2 px-4 rounded hover:bg-zinc-900 button-trigger-hide">
+						Cancel
+					</button>
+					<button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+						Submit
+					</button>
+				</div>
+			</form>
+		</div>
+	)
+}
+
+export const FormOrg = ({ orgs, type }: { orgs: Organization, type: TFormOrgType }) => {
+	switch (type) {
+		case "general":
+			return (
+				<>
+					<NavTabsFormOrg orgId={orgs.id} type={ type } />
+					<FormOrgGeneral orgs={ orgs } />
+				</>
+			)
+		case "npwp":
+			return (
+				<>
+					<NavTabsFormOrg orgId={orgs.id} type={ type } />
+					<FormOrgNpwp orgs={ orgs } />
+				</>
+			)
+		case "contact":
+			return (
+				<>
+					<NavTabsFormOrg orgId={orgs.id} type={ type } />
+					<FormOrgContact orgs={ orgs } />
+				</>
+			)
+		case "business":
+			return (
+				<>
+					<NavTabsFormOrg orgId={orgs.id} type={ type } />
+					<FormOrgBusiness orgs={ orgs } />
+				</>
+			)
+		default:
+			return (
+				<>
+					<NavTabsFormOrg orgId={orgs.id} type={ type } />
+				</>
+			)
+	}
 }

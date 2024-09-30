@@ -1,5 +1,5 @@
 import { Context } from "hono";
-import { AllocationRow, AssessorEditor, AssessorRow, FormAllocationRow, FormSettingsDateTitle, FormSettingsModules, ModuleEditor, ModulesRow, PairingF2FAssessorWithParticipant, PairingGroupAssessorWithParticipant, PersonEditor, Pojo, RowPeserta, SettingsDateTitle, SettingsModules, TableGroupSlots, TableGroups } from "./components";
+import { AllocationRow, AssessorEditor, AssessorRow, FormAllocationRow, FormOrg, FormOrgBusiness, FormOrgContact, FormOrgGeneral, FormOrgNpwp, FormSettingsDateTitle, FormSettingsModules, ModuleEditor, ModulesRow, NavTabsFormOrg, PairingF2FAssessorWithParticipant, PairingGroupAssessorWithParticipant, PersonEditor, Pojo, RowPeserta, SettingsDateTitle, SettingsModules, TableAssessors, TableGroupSlots, TableGroups } from "./components";
 import { getBatch, getBatchRuntimeInfo, getSlotPosition, randomToken, regroupAscentBatch, regroupCustomBatch } from "./utils";
 import { encrypt } from "./crypto";
 
@@ -630,6 +630,7 @@ export async function PUT_FACEAssessorParticipantPairing(c: Context<{ Bindings: 
 }
 
 export async function GET_AssessorEditor(c: Context<{ Bindings: Env }>) {
+	const num = c.req.query("num")
 	const isForm = c.req.query('form')
 	const assessorId = c.req.param('id_assessor')
 
@@ -638,41 +639,94 @@ export async function GET_AssessorEditor(c: Context<{ Bindings: Env }>) {
 	const assesor = await c.env.DB.prepare("SELECT * FROM assessors WHERE id = ?").bind(assessorId).first()
 	if (!assesor) return c.text("not found", 404)
 
-	return c.html(<AssessorEditor assessor={ assesor as Assessor } />)
+	return c.html(<AssessorEditor num={num} assessor={ assesor as Assessor } />)
 }
 
 export async function PUT_AssessorEditor(c: Context<{ Bindings: Env }>) {
-	type DataWithPassword = {
-		email: string,
-		fullname: string,
-		username: string,
-		password: string,
-	}
-
-	type DataNoPassword = {
-		email: string,
-		fullname: string,
-		username: string,
-	}
+	type DataWithPassword = Omit<Omit<Assessor, "id">, "hash"> & { password: string }
+	type DataNoPassword = Omit<Omit<Omit<Assessor, "id">, "hash">, "password">
 
 	async function updateWithPassword(data: DataWithPassword, assessorId: string) {
 		const hash = await encrypt(data.password ?? randomToken(), c);
 		await c.env.DB
-			.prepare('UPDATE assessors SET fullname = ?, username = ?, email = ?, hash = ? WHERE id = ?')
-			.bind(data.fullname, data.username, data.email, hash, assessorId)
+			.prepare(`
+				UPDATE assessors 
+				SET 
+					fullname = ?, 
+					username = ?, 
+					email = ?, 
+					hash = ?,
+					
+					ranking = ?, 
+					university = ?, 
+					date_of_birth = ?, 
+					graduation_year = ?, 
+					phone_number = ?, 
+					home_address = ?, 
+					ktp_number = ?, 
+					npwp_name = ?, 
+					npwp_number = ?
+				WHERE id = ?
+			`)
+			.bind(
+				data.fullname, 
+				data.username, 
+				data.email, 
+				hash, 
+				data.ranking,
+				data.university,
+				data.date_of_birth,
+				data.graduation_year,
+				data.phone_number,
+				data.home_address,
+				data.ktp_number,
+				data.npwp_name,
+				data.npwp_number,
+				assessorId
+			)
 			.run()
 	}
 
 	async function updateNoPassword(data: DataNoPassword, assessorId: string) {
 		await c.env.DB
-			.prepare('UPDATE assessors SET fullname = ?, username = ?, email = ? WHERE id = ?')
-			.bind(data.fullname, data.username, data.email, assessorId)
+			.prepare(`
+				UPDATE assessors 
+				SET 
+					fullname = ?, 
+					username = ?, 
+					email = ?,
+
+					ranking = ?, 
+					university = ?, 
+					date_of_birth = ?, 
+					graduation_year = ?, 
+					phone_number = ?, 
+					home_address = ?, 
+					ktp_number = ?, 
+					npwp_name = ?, 
+					npwp_number = ?
+				WHERE id = ?`)
+			.bind(
+				data.fullname, 
+				data.username, 
+				data.email, 
+				
+				data.ranking,
+				data.university,
+				data.date_of_birth,
+				data.graduation_year,
+				data.phone_number,
+				data.home_address,
+				data.ktp_number,
+				data.npwp_name,
+				data.npwp_number,
+				assessorId
+			)
 			.run()
 	}
 
 
-	const body = (await c.req.parseBody()) as unknown as DataNoPassword & { password?: string }
-
+	const body = (await c.req.parseBody()) as unknown as DataNoPassword & { password?: string, num: string }
 	const assessorId = c.req.param('id_assessor')
 
 	const [uname, email] = await c.env.DB.batch([
@@ -691,12 +745,22 @@ export async function PUT_AssessorEditor(c: Context<{ Bindings: Env }>) {
 
 	return c.html(
 		<AssessorRow
+			num={ body.num }
 			assessor={ {
 				hash: "",
 				id: assessorId,
 				email: body?.email,
 				username: body.username,
-				fullname: body.fullname
+				fullname: body.fullname,
+				ranking: body.ranking,
+				university: body.university,
+				date_of_birth: body.date_of_birth,
+				graduation_year: body.graduation_year,
+				phone_number: body.phone_number,
+				home_address: body.home_address,
+				ktp_number: body.ktp_number,
+				npwp_name: body.npwp_name,
+				npwp_number: body.npwp_number
 			} as unknown as Assessor }
 		/>
 	)
@@ -743,20 +807,10 @@ export async function POST_AssessorEditor(c: Context<{ Bindings: Env }>) {
 	if (uname.results.length > 0) return c.html("Username is not available", 400)
 	if (email && email.results.length > 0) return c.html("Email is not available", 400)
 	await insertData(body as unknown as DataWithPassword, assessorId)
-
+	const rs = await c.env.DB.prepare('SELECT * FROM assessors ORDER BY created DESC').all();
+	
 	c.res.headers.append('HX-Trigger', `{"assessor-inserted": {}}`);
-
-	return c.html(
-		<AssessorRow
-			assessor={ {
-				hash: "",
-				id: assessorId,
-				email: body?.email,
-				username: body.username,
-				fullname: body.fullname
-			} as unknown as Assessor }
-		/>
-	)
+	return c.html(<TableAssessors data={ rs.results } />)
 }
 
 export async function GET_ModuleEditor(c: Context<{ Bindings: Env }>) {
@@ -831,4 +885,20 @@ export async function POST_ModuleEditor(c: Context<{ Bindings: Env }>) {
 			mod={ body as unknown as AcesModule }
 		/>
 	)
+}
+
+
+
+// ===============================================================================================================================
+// ===============================================================================================================================
+
+export async function GET_FormOrg(c: Context<{ Bindings: Env }>) {
+	const formType = c.req.query("type") as TFormOrgType
+	const orgId = c.req.param("org_id")
+	console.log(formType)
+	const org = await c.env.DB.prepare("SELECT * FROM organizations WHERE id = ?").bind(orgId).first()
+	if (!org) return c.text("not found", 404)
+
+	c.res.headers.append('HX-Trigger', `{"reload-event": {}}`);
+	return c.html(<FormOrg orgs={org as Organization} type={formType} />)
 }

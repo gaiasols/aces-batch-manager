@@ -31,6 +31,12 @@ type Batch = {
 	time4: string | null;
 	created?: string | null;
 	updated?: string | null;
+	time1_end?: string | null;
+	time2_end?: string | null;
+	time3_end?: string | null;
+	time4_end?: string | null;
+	batch_timestamp_start?: number | null;
+	batch_timestamp_end?: number | null;
 };
 
 type VBatch = Batch & {
@@ -83,9 +89,30 @@ type BatchRuntimeInfo = {
 type Organization = {
 	id: string;
 	name: string;
-	address: string | null;
 	created?: string | null;
 	updated?: string | null;
+	address: string | null;
+	city: string | null;
+	province: string | null;
+	postal_code: number | null;
+	phone: string | null;
+	email: string | null;
+	website: string | null;
+	organization_type: number | null;
+	business_sector: number | null;
+	company_logo: string | null;
+	npwp_number: string | null;
+	npwp_name: string | null;
+	npwp_nik: string | null;
+	npwp_address: string | null;
+	npwp_village: string | null;
+	npwp_district: string | null;
+	npwp_city: string | null;
+	npwp_province: string | null;
+	contact_name: string | null;
+	contact_phone: string | null;
+	contact_email: string | null;
+
 };
 
 type VOrganization = Organization & {
@@ -209,6 +236,15 @@ type Assessor = {
 	fullname: string;
 	username: string;
 	email: string | null;
+	ranking?: number | null;       
+    university?: string | null;    
+    date_of_birth?: string | null; 
+    graduation_year?: number | null
+    phone_number?: string | null;  
+    home_address?: string | null;  
+    ktp_number?: number | null;    
+    npwp_number?: string | null;   
+    npwp_name?: string | null;    
 };
 
 type SlotsAlloc = {
@@ -253,3 +289,13 @@ type Minmax = {
 };
 
 type GroupFacePosition = Record<string, 1 | 2 | 3 | 4>;
+
+type TDeploymentRequestContract = {
+	date_start: string,
+	time_start: string,
+	date_end: string,
+	time_end: string,
+	type: "batch" | "slot_1" | "slot_2" | "slot_3" | "slot_4",
+}
+
+type TFormOrgType = "general" | "business" | "npwp" | "contact"
