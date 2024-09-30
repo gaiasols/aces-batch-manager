@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { serveStatic } from 'hono/cloudflare-workers';
 import { Layout, XLayout } from "./layout";
-import { FormNewBatch, FormNewOrg, LoginForm, Pojo, PrevNext, TableAssessors, TableBatches, TableModules, TableOrgBatches, TableOrgs } from "./components";
+import { FormNewBatch, FormNewOrg, FormOrg, FormOrgBusiness, FormOrgContact, FormOrgGeneral, FormOrgNpwp, LockSVG, LoginForm, NavTabsFormOrg, Pojo, PrevNext, TableAssessors, TableBatches, TableModules, TableOrgBatches, TableOrgs } from "./components";
 import { getSessionUser, randomNamesWithPassword, randomToken } from "./utils";
 import { sealData } from "iron-session";
 import { deleteCookie, setCookie } from "hono/cookie";
@@ -9,13 +9,17 @@ import { decrypt } from "./crypto";
 import { html } from "hono/html";
 import { app as batch } from "./batch";
 import { app as service } from './service';
-import { GET_AssessorEditor, GET_ModuleEditor, POST_AssessorEditor, POST_ModuleEditor, PUT_AssessorEditor, PUT_ModuleEditor } from "./htmx";
+import { GET_AssessorEditor, GET_FormOrg, GET_ModuleEditor, POST_AssessorEditor, POST_ModuleEditor, PUT_AssessorEditor, PUT_ModuleEditor } from "./htmx";
+import { businessSectorArray } from "./business-sector";
+import { orgsTypeArray } from "./orgs-type";
 
 const app = new Hono<{ Bindings: Env }>();
 
 
 app.use('/images/*', serveStatic({ root: './' }));
 app.use('/static/*', serveStatic({ root: './' }));
+app.use('/index.js', serveStatic({ path: './index.js' }));
+app.use('/deployment.js', serveStatic({ path: './deployment.js' }));
 app.use('/asesor.js', serveStatic({ path: './asesor.js' }));
 app.use('/styles.css', serveStatic({ path: './styles.css' }));
 
@@ -297,7 +301,7 @@ app.get('/assessors', async (c) => {
 				class="assessor-editor py-5 mb-10 hidden"
 				hx-post={ `/assessors` }
 				hx-target={ `table` }
-				hx-swap="afterbegin"
+				hx-swap="outerHTML"
 				id="form-new"
 			>
 				<div class="flex gap-5 input-container">
@@ -316,13 +320,13 @@ app.get('/assessors', async (c) => {
 				</div>
 				<div class="flex gap-5 input-container mt-2">
 					<div class="w-full">
-						<label for="email" class="block text-sm font-medium leading-6 text-gray-900">Email</label>
+						<label for="email" required class="block text-sm font-medium leading-6 text-gray-900">Email <span class="text-red-600">*</span></label>
 						<div class="mt-2">
 							<input class="w-full" type="email" name="email" id="email" />
 						</div>
 					</div>
 					<div class="w-full">
-						<label for="password" class="block text-sm font-medium leading-6 text-gray-900">Password</label>
+						<label for="password" required class="block text-sm font-medium leading-6 text-gray-900">Password <span class="text-red-600">*</span></label>
 						<div class="mt-2">
 							<input class="w-full" type="text" name="password" id="password" />
 						</div>
@@ -410,6 +414,35 @@ app.post('/orgs/:org_id', async (c) => {
 	return c.redirect(`/batches/${new_id}`);
 })
 
+app.get("/orgs/:org_id/update-orgs", async (c) => {
+	const org = await c.env.DB.prepare("SELECT * FROM organizations WHERE id = ?").bind(c.req.param("org_id")).first()
+	if (!org) return c.text("not found", 404)
+
+	return c.html(
+		<Layout js={ ["/static/update-orgs.js"] }>
+			<div class="flex items-center gap-4 mt-10 mb-10">
+				<h1 class="flex-grow text-2xl font-semibold tracking-tight">Update Organisasi</h1>
+			</div>
+			<div id="update-org-content">
+				<NavTabsFormOrg orgId={ c.req.param("org_id") } type="general" />
+				<FormOrgGeneral orgs={ org as Organization } />
+			</div>
+		</Layout>
+	)
+})
+
+app.put("/orgs/:org_id/update-orgs/:form-type", async (c) => {
+	const body = await c.req.parseBody()
+	const protectedFields = ["id", "created", "updated"]
+	const fields = Object.keys(body).filter((key) => !protectedFields.includes(key))
+	const query = `UPDATE organizations SET ${fields.map((field) => `${field} = ?`).join(", ")} WHERE id = ?`
+	const values = fields.map((field) => body[field]).concat(c.req.param("org_id"))
+	await c.env.DB.prepare(query).bind(...values).run()
+
+	c.res.headers.append('HX-Trigger', `{"reload-event": {}}`);
+	return c.html(<FormOrg orgs={ { ...body, id: c.req.param("org_id") } as any } type={ c.req.param("form-type") as TFormOrgType } />)
+})
+
 // htmx
 // =============================================================================================
 // =============================================================================================
@@ -421,6 +454,8 @@ app.put("/assessors/:id_assessor", PUT_AssessorEditor)
 app.post("/modules", POST_ModuleEditor)
 app.get("/modules/:id_module", GET_ModuleEditor)
 app.put("/modules/:id_module", PUT_ModuleEditor)
+
+app.get("/orgs/:org_id/form", GET_FormOrg)
 
 app.route('/batches', batch);
 app.route('/service', service);

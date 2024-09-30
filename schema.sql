@@ -12,19 +12,49 @@ DROP TABLE IF EXISTS assessors; CREATE TABLE assessors (
 	[id] INTEGER PRIMARY KEY
 	, [fullname] TEXT NOT NULL
 	, [username] TEXT NOT NULL
-	, [email] TEXT UNIQUE
+	, [ranking] INT
+    , [university] VARCHAR(255)
+    , [date_of_birth] DATE
+    , [graduation_year] INT
+    , [phone_number] VARCHAR(20)
+    , [home_address] TEXT
+    , [email] VARCHAR(255)
+    , [ktp_number] INT
+    , [npwp_number] VARCHAR(50)
+    , [npwp_name] VARCHAR(255)
 	, [hash] TEXT
 	, [created] TEXT NOT NULL DEFAULT (datetime('now')||'Z')
 	, [updated] TEXT
 );
 
-DROP TABLE IF EXISTS organizations; CREATE TABLE organizations (
-	[id] INTEGER PRIMARY KEY
-	, [name] TEXT NOT NULL
-	, [address] TEXT
-	, [created] TEXT NOT NULL DEFAULT (datetime('now')||'Z')
-	, [updated] TEXT
+DROP TABLE IF EXISTS organizations;CREATE TABLE organizations (
+    [id] INTEGER PRIMARY KEY,
+    [name] TEXT NOT NULL,
+    [address] TEXT,
+    [city] TEXT,
+    [province] TEXT,
+    [postal_code] INTEGER,
+    [phone] TEXT,
+    [email] TEXT,
+    [website] TEXT,
+    [organization_type] INTEGER,
+    [business_sector] INTEGER,
+    [company_logo] TEXT,
+    [npwp_number] TEXT,
+    [npwp_name] TEXT,
+    [npwp_nik] TEXT,
+    [npwp_address] TEXT,
+    [npwp_village] TEXT,
+    [npwp_district] TEXT,
+    [npwp_city] TEXT,
+    [npwp_province] TEXT,
+    [contact_name] TEXT,
+    [contact_phone] TEXT,
+    [contact_email] TEXT,
+    [created] TEXT NOT NULL DEFAULT (datetime('now') || 'Z'),
+    [updated] TEXT
 );
+
 
 DROP TABLE IF EXISTS modules; CREATE TABLE modules (
 	[id] TEXT PRIMARY KEY
@@ -67,6 +97,12 @@ DROP TABLE IF EXISTS batches; CREATE TABLE batches (
 	, [time2] TEXT
 	, [time3] TEXT
 	, [time4] TEXT
+	, [time1_end] TEXT
+	, [time2_end] TEXT
+	, [time3_end] TEXT
+	, [time4_end] TEXT
+	, [batch_timestamp_start] INTEGER
+	, [batch_timestamp_end] INTEGER
 	, [created] TEXT NOT NULL DEFAULT (datetime('now')||'Z')
 	, [updated] TEXT
 );

@@ -8,13 +8,13 @@ export const Layout: FC = (props) => {
 	return (
 		<html>
 			<head>
-				<title>{title}</title>
-				{props.refresh != undefined && <meta http-equiv="refresh" content={props.refresh} />}
+				<title>{ title }</title>
+				{ props.refresh != undefined && <meta http-equiv="refresh" content={ props.refresh } /> }
 				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 				<link href="/styles.css" rel="stylesheet" />
-				{Array.isArray(props?.css) && props.css.map(v => (
-					<link href={v} rel="stylesheet" />
-				))}
+				{ Array.isArray(props?.css) && props.css.map(v => (
+					<link href={ v } rel="stylesheet" />
+				)) }
 				<script
 					src="https://unpkg.com/htmx.org@1.9.10"
 					integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
@@ -23,10 +23,14 @@ export const Layout: FC = (props) => {
 				<script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
 			</head>
 			<body class="antialiased">
-				<div class="min-h-screen px-4 sm:px-5 pb-60" id={props?.id}>
+				<div class="min-h-screen px-4 sm:px-5 pb-60" id={ props?.id }>
 					<Mainmenu />
-					<div class="max-w-2xl mx-auto">{props.children}</div>
+					<div class="max-w-2xl mx-auto">{ props.children }</div>
 				</div>
+				<script src="/index.js"></script>
+				{ Array.isArray(props?.js) && props.js.map(v => (
+					<script src={ v }></script>
+				)) }
 			</body>
 		</html>
 	);
@@ -59,12 +63,12 @@ export const XLayout: FC = (props) => {
 								</div>
 							</div>
 							<p class="text-xl font-bold mb-5">Lorem ipsum dolor sis amet.</p>
-							{/* <LoginForm /> */}
-							{props.children}
+							{/* <LoginForm /> */ }
+							{ props.children }
 						</div>
 					</div>
 				</div>
-				{html`<script>
+				{ html`<script>
 					document.body.addEventListener('login-ok', function (evt) {
 						document.location = '/orgs';
 					});
